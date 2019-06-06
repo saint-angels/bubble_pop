@@ -6,7 +6,7 @@ public class BubbleField : MonoBehaviour
 {
 
     [SerializeField] private Bubble bubblePrefab;
-    [SerializeField] private Transform fieldOrigin;
+    [SerializeField] private Transform bubbleContainer;
 
     private const float bubbleSize = 1f;
     private const float fieldWidth = 7f;
@@ -33,12 +33,11 @@ public class BubbleField : MonoBehaviour
         {
             for (int y = 0; y < fieldHeight; y++)
             {
-                float positionX = fieldOrigin.position.x + (bubbleSize / 2f) * x;
-                float positionY = fieldOrigin.position.y + (bubbleSize / 2f) * y;
+                float positionX = bubbleContainer.position.x + (bubbleSize / 2f) * x;
+                float positionY = bubbleContainer.position.y + (bubbleSize / 2f) * y;
 
                 Vector3 spawnPosition = new Vector3(positionX, positionY, 0);
-                Bubble newBubble = Instantiate(bubblePrefab, spawnPosition, Quaternion.identity);
-                newBubble.transform.SetParent(transform);
+                Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
             }
         }
     }
