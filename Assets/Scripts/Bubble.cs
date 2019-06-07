@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class Bubble : MonoBehaviour
 {
+    [SerializeField] private new Collider2D collider;
+
+    public void SetInteractible(bool isInteractible)
+    {
+        collider.enabled = isInteractible;
+    }
+
     // Start is called before the first frame update
     void Start()
     {

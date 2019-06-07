@@ -10,7 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2035585107933552993}
   - component: {fileID: 3281032778686570695}
-  m_Layer: 0
+  - component: {fileID: 6724667996857311628}
+  m_Layer: 8
   m_Name: Bubble
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,6 +45,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03d2486bae49868428e967cf9986ae1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collider: {fileID: 6724667996857311628}
+--- !u!58 &6724667996857311628
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3872956436642062634}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.25
 --- !u!1 &6058870851089822330
 GameObject:
   m_ObjectHideFlags: 0
@@ -54,7 +72,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8846070273015810316}
   - component: {fileID: 494703520056575545}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: New Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

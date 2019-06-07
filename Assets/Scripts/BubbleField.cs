@@ -38,6 +38,8 @@ public class BubbleField : MonoBehaviour
 
                 Vector3 spawnPosition = new Vector3(positionX, positionY, 0);
                 Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
+                newBubble.SetInteractible(true);
+
             }
         }
     }
