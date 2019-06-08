@@ -20,6 +20,13 @@ public class BubbleField : MonoBehaviour
         SpawnMore();
     }
 
+    public void AddBubble(Bubble newBubble, int x, int y)
+    {
+        bubbles[x, y] = newBubble;
+        newBubble.transform.position = IndecesToPosition(x, y);
+        newBubble.transform.SetParent(bubbleContainer, true);
+    }
+
     public void HideBubbleOutline()
     {
         bubbleOutline.SetActive(false);
@@ -30,7 +37,7 @@ public class BubbleField : MonoBehaviour
         Bubble.BubbleSide bubbleSide = bubble.ClosestSideToPoint(contactPoint);
 
         int bubbleX, bubbleY;
-        if (BubbleIndeces(bubble, out bubbleX, out bubbleY))
+        if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
         {
             int neighbourSlotX = bubbleX;
             int neighbourSlotY = bubbleY;
@@ -52,7 +59,7 @@ public class BubbleField : MonoBehaviour
                 Bubble neighbourBubble = bubbles[neighbourSlotX, neighbourSlotY];
                 if (neighbourBubble == null)
                 {
-                    bubbleOutline.transform.position = FieldIndecesToPosition(neighbourSlotX, neighbourSlotY);
+                    bubbleOutline.transform.position = IndecesToPosition(neighbourSlotX, neighbourSlotY);
                     bubbleOutline.SetActive(true);
                     return new Vector2Int(neighbourSlotX, neighbourSlotY);
                 }
@@ -67,7 +74,7 @@ public class BubbleField : MonoBehaviour
         }
     }
 
-    private bool BubbleIndeces(Bubble bubble, out int bubbleX, out int bubbleY)
+    private bool GetBubbleIndeces(Bubble bubble, out int bubbleX, out int bubbleY)
     {
         for (int x = 0; x < fieldWidth; x++)
         {
@@ -93,18 +100,13 @@ public class BubbleField : MonoBehaviour
         return x < fieldWidth && 0 <= x && y < fieldHeight && 0 <= y;
     }
 
-    void Update()
-    {
-        
-    }
-
     private void SpawnMore()
     {
         for (int x = 0; x < fieldWidth - 1; x++)
         {
             for (int y = 1; y < fieldHeight; y++)
             {
-                Vector3 spawnPosition = FieldIndecesToPosition(x,y);
+                Vector3 spawnPosition = IndecesToPosition(x,y);
                 Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
                 newBubble.SetInteractible(true);
 
@@ -113,7 +115,7 @@ public class BubbleField : MonoBehaviour
         }
     }
 
-    private Vector3 FieldIndecesToPosition(int x, int y)
+    private Vector3 IndecesToPosition(int x, int y)
     {
         float positionX = bubbleContainer.position.x + (bubbleSize / 2f) * x;
         float positionY = bubbleContainer.position.y + (bubbleSize / 2f) * y;

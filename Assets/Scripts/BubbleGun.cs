@@ -108,6 +108,11 @@ public class BubbleGun : MonoBehaviour
         }
     }
 
+    private void ShootBubble(Vector2 fieldSlot)
+    {
+        //bubbleField.AddBubble()
+    }
+
     private void HandleBubbleHit(RaycastHit2D hit)
     {
         Bubble bubble = hit.collider.GetComponent<Bubble>();
