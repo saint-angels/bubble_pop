@@ -12,6 +12,8 @@ public class GameController : MonoBehaviour
 
     private Bubble gunBubble;
 
+    private List<Vector3> trajectoryPositionsCurrent = new List<Vector3>();
+
     void Start()
     {
         SetBubbleGun();
@@ -38,21 +40,20 @@ public class GameController : MonoBehaviour
         trajectoryLine.gameObject.SetActive(press);
         if (press)
         {
-            trajectoryLine.SetPosition(0, bubbleGunPoint.position);
+            trajectoryPositionsCurrent.Clear();
+            trajectoryPositionsCurrent.Add(bubbleGunPoint.position);
 
-            //TODO: Calc full trajectory
             Vector3 mousePosition = Input.mousePosition;
 
             float distanceFromCamera = Vector3.Distance(bubbleGunPoint.position, Camera.main.transform.position);
             Vector3 mouseWorldPosition = Camera.main.ViewportToWorldPoint(new Vector3(mousePosition.x/Screen.width, mousePosition.y/ Screen.height, distanceFromCamera));
-            trajectoryLine.SetPosition(1, mouseWorldPosition);
 
             Vector2 castDirection = (mouseWorldPosition - bubbleGunPoint.position).normalized;
 
             RaycastHit2D hit = Hit(bubbleGunPoint.position, castDirection, true);
             if (hit.collider != null)
             {
-                trajectoryLine.SetPosition(1, hit.point);
+                trajectoryPositionsCurrent.Add(hit.point);
 
                 if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Walls"))
                 {
@@ -60,11 +61,11 @@ public class GameController : MonoBehaviour
                     RaycastHit2D bounceHit = Hit(hit.point, reflectedDirection, false);
                     if (bounceHit.collider != null)
                     {
-                        trajectoryLine.SetPosition(2, bounceHit.point);
+                        trajectoryPositionsCurrent.Add(bounceHit.point);
                     }
                     else
                     {
-                        trajectoryLine.SetPosition(2, new Vector3(hit.point.x, hit.point.y, 0) + reflectedDirection);
+                        trajectoryPositionsCurrent.Add(new Vector3(hit.point.x, hit.point.y, 0) + reflectedDirection);
                     }
                 }
                 else
@@ -73,10 +74,11 @@ public class GameController : MonoBehaviour
                 }
             }
 
-            
+            trajectoryLine.positionCount = trajectoryPositionsCurrent.Count;
+            trajectoryLine.SetPositions(trajectoryPositionsCurrent.ToArray());
+
         }
     }
-
 
     private RaycastHit2D Hit(Vector3 start, Vector3 direction, bool withWalls)
     {
