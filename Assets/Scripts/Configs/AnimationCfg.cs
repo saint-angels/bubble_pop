@@ -7,4 +7,7 @@ public class AnimationCfg : ScriptableObject
 {
     [Header("Shooting")]
     public float shootBubbleFlyDuration = .2f;
+
+    [Header("Bubbles")]
+    public float bubbleFallDuration = 1f;
 }

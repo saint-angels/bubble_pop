@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,17 +20,21 @@ public class Bubble : MonoBehaviour
         public Transform point;
     }
 
+    public event Action OnDeath = () => { };
+
     public BubbleType Type { get; private set; }
 
     [SerializeField] private new Collider2D collider;
     [SerializeField] private SidePoint[] bubbleSidePoints;
     [SerializeField] private new SpriteRenderer renderer;
 
-    public void Init(BubbleType bubbleType)
-    {
-        Type = bubbleType;
-        renderer.color = Type.bubbleColor;
+    private AnimationCfg animationCfg;
 
+    public void Init(BubbleType bubbleType, AnimationCfg animationCfg, bool interactible)
+    {
+        this.animationCfg = animationCfg;
+        Init(bubbleType);
+        SetInteractible(interactible);
     }
 
     public void SetInteractible(bool isInteractible)
@@ -51,6 +57,21 @@ public class Bubble : MonoBehaviour
             }
         }
         return closestSide;
+    }
+
+    public void Fall()
+    {
+        var fallTween = transform.DOMove(transform.position + Vector3.down * 10f, animationCfg.bubbleFallDuration).SetEase(Ease.InOutQuint);
+        fallTween.OnComplete(() =>
+        {
+            ObjectPool.Despawn<Bubble>(this);
+        });
+    }
+
+    private void Init(BubbleType bubbleType)
+    {
+        Type = bubbleType;
+        renderer.color = Type.bubbleColor;
     }
 
 

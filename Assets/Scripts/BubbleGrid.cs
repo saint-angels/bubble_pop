@@ -13,20 +13,48 @@ public class BubbleGrid : MonoBehaviour
     private const int fieldHeight = 7;
 
     private Bubble[,] bubbles = new Bubble[fieldWidth, fieldHeight];
-    private BubbleType[] bubbleTypes;
+    private BubblesConfig bubblesConfig;
 
-    public void Init(BubbleType[] bubbleTypes)
+    private AnimationCfg animationCfg;
+
+    private HashSet<Bubble> bubblesMatchedSet = new HashSet<Bubble>();
+    
+
+    public void Init(BubblesConfig bubblesConfig, AnimationCfg animationCfg)
     {
-        this.bubbleTypes = bubbleTypes;
+        this.bubblesConfig = bubblesConfig;
+        this.animationCfg = animationCfg;
+
         SpawnMore();
     }
 
-    public void AddBubble(Bubble newBubble, int x, int y)
+    public void AttachBubble(Bubble newBubble, int x, int y)
     {
         bubbles[x, y] = newBubble;
         newBubble.transform.position = IndecesToPosition(x, y);
         newBubble.transform.SetParent(bubbleContainer, true);
         newBubble.SetInteractible(true);
+
+        //TODO: If attach bubble gonna be called not only from gun, don't clean hashset here
+        bubblesMatchedSet.Clear();
+
+        CheckMatches(newBubble, x, y);
+
+        List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
+        for (int bubbleIndex = bubblesMatched.Count - 1; bubbleIndex >= 0; bubbleIndex--)
+        {
+            DestroyBubble(bubblesMatched[bubbleIndex]);
+        }
+    }
+
+    private void DestroyBubble(Bubble bubble)
+    {
+        int bubbleX, bubbleY;
+        if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
+        {
+            bubbles[bubbleX, bubbleY] = null;
+            bubble.Fall();
+        }
     }
 
     public void HideBubbleOutline()
@@ -56,7 +84,7 @@ public class BubbleGrid : MonoBehaviour
                     break;
             }
 
-            if (PointInField(neighbourSlotX, neighbourSlotY))
+            if (PointOnGrid(neighbourSlotX, neighbourSlotY))
             {
                 Bubble neighbourBubble = bubbles[neighbourSlotX, neighbourSlotY];
                 if (neighbourBubble == null)
@@ -83,6 +111,27 @@ public class BubbleGrid : MonoBehaviour
         return new Vector3(positionX, positionY, 0);
     }
 
+    private void CheckMatches(Bubble originBubble, int x, int y)
+    {
+        Vector2Int[] neighbourOffsets = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+        foreach (Vector2Int offset in neighbourOffsets)
+        {
+            int neighbourX = x + offset.x;
+            int neighbourY = y + offset.y;
+            if (PointOnGrid(neighbourX, neighbourY))
+            {
+                Bubble neighbourBubble = bubbles[neighbourX, neighbourY];
+                if (neighbourBubble != null && neighbourBubble.Type == originBubble.Type && bubblesMatchedSet.Contains(neighbourBubble) == false)
+                {
+                    bubblesMatchedSet.Add(originBubble);
+                    bubblesMatchedSet.Add(neighbourBubble);
+                    CheckMatches(neighbourBubble, x, y);
+                }
+            }
+        }
+    }
+
     private bool GetBubbleIndeces(Bubble bubble, out int bubbleX, out int bubbleY)
     {
         for (int x = 0; x < fieldWidth; x++)
@@ -104,7 +153,7 @@ public class BubbleGrid : MonoBehaviour
         return false;
     }
 
-    private bool PointInField(int x, int y)
+    private bool PointOnGrid(int x, int y)
     {
         return x < fieldWidth && 0 <= x && y < fieldHeight && 0 <= y;
     }
@@ -117,11 +166,12 @@ public class BubbleGrid : MonoBehaviour
             {
                 if (Random.value > .3f)
                 {
-                    BubbleType randomType = bubbleTypes[Random.Range(0, bubbleTypes.Length)];
+                    BubbleType type = bubblesConfig.GetTypeForSpawn();
                     Vector3 spawnPosition = IndecesToPosition(x,y);
                     Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
-                    newBubble.Init(randomType);
-                    newBubble.SetInteractible(true);
+                    newBubble.Init(type, animationCfg, true);
+
+                    Root.Instance.UI.AddHudToBubble(newBubble);
 
                     bubbles[x, y] = newBubble;
                 }

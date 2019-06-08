@@ -13,11 +13,13 @@ public class BubbleGun : MonoBehaviour
     private List<Vector3> trajectoryPositionsCurrent = new List<Vector3>();
     private Vector2Int? targetSlot = null;
     private BubbleGrid grid;
-
     private AnimationCfg animationCfg;
-    public void Init(BubbleGrid grid, AnimationCfg animationCfg)
+
+    private BubblesConfig bubblesConfig;
+    public void Init(BubbleGrid grid, BubblesConfig bubblesConfig, AnimationCfg animationCfg)
     {
         this.grid = grid;
+        this.bubblesConfig = bubblesConfig;
         this.animationCfg = animationCfg;
         LoadGun();
     }
@@ -27,6 +29,7 @@ public class BubbleGun : MonoBehaviour
         if (currentGunBubble == null)
         {
             Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, bubbleGunPoint.position, Quaternion.identity);
+            newBubble.Init(bubblesConfig.GetTypeForSpawn(), animationCfg, false);
             newBubble.SetInteractible(false);
             currentGunBubble = newBubble;
         }
@@ -113,7 +116,7 @@ public class BubbleGun : MonoBehaviour
                 Vector2Int gunTargetSlot = targetSlot.Value;
                 moveTween.OnComplete(() => 
                 {
-                    grid.AddBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y);
+                    grid.AttachBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y);
                     LoadGun();
                 });
 

@@ -53,7 +53,7 @@ using System.Collections.Generic;
 
                 clone.transform.position = atPosition;
                 clone.transform.rotation = withRotation;
-                clone.transform.parent = parent;
+                clone.transform.SetParent(parent);
                 clone.gameObject.SetActive(true);
                 return clone as T;
             }

@@ -13,7 +13,7 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
-        grid.Init(bubblesConfig.types);
-        gun.Init(grid, animationCfg);
+        grid.Init(bubblesConfig, animationCfg);
+        gun.Init(grid, bubblesConfig, animationCfg);
     }
 }
