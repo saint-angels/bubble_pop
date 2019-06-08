@@ -15,6 +15,10 @@ public class BubbleField : MonoBehaviour
 
     private Bubble[,] bubbles = new Bubble[fieldWidth, fieldHeight];
 
+    public void Init()
+    {
+        SpawnMore();
+    }
 
     public void HideBubbleOutline()
     {
@@ -88,12 +92,6 @@ public class BubbleField : MonoBehaviour
     {
         return x < fieldWidth && 0 <= x && y < fieldHeight && 0 <= y;
     }
-
-    void Start()
-    {
-        SpawnMore();
-    }
-
 
     void Update()
     {
