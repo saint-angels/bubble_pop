@@ -25,6 +25,7 @@ public class BubbleField : MonoBehaviour
         bubbles[x, y] = newBubble;
         newBubble.transform.position = IndecesToPosition(x, y);
         newBubble.transform.SetParent(bubbleContainer, true);
+        newBubble.SetInteractible(true);
     }
 
     public void HideBubbleOutline()
@@ -74,6 +75,13 @@ public class BubbleField : MonoBehaviour
         }
     }
 
+    public Vector3 IndecesToPosition(int x, int y)
+    {
+        float positionX = bubbleContainer.position.x + (bubbleSize / 2f) * x;
+        float positionY = bubbleContainer.position.y + (bubbleSize / 2f) * y;
+        return new Vector3(positionX, positionY, 0);
+    }
+
     private bool GetBubbleIndeces(Bubble bubble, out int bubbleX, out int bubbleY)
     {
         for (int x = 0; x < fieldWidth; x++)
@@ -113,12 +121,5 @@ public class BubbleField : MonoBehaviour
                 bubbles[x, y] = newBubble;
             }
         }
-    }
-
-    private Vector3 IndecesToPosition(int x, int y)
-    {
-        float positionX = bubbleContainer.position.x + (bubbleSize / 2f) * x;
-        float positionY = bubbleContainer.position.y + (bubbleSize / 2f) * y;
-        return new Vector3(positionX, positionY, 0);
     }
 }
