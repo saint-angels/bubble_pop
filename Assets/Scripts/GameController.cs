@@ -5,7 +5,8 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
     [SerializeField] private Transform bubbleGunPoint = null;
-    [SerializeField] private Bubble bubblePrefab;
+    [SerializeField] private Bubble bubblePrefab = null;
+    [SerializeField] private BubbleField bubbleField = null;
 
     [SerializeField] private LineRenderer trajectoryLine;
 
@@ -13,6 +14,8 @@ public class GameController : MonoBehaviour
     private Bubble gunBubble;
 
     private List<Vector3> trajectoryPositionsCurrent = new List<Vector3>();
+
+    private Vector2Int? targetSlot = null;
 
     void Start()
     {
@@ -55,29 +58,72 @@ public class GameController : MonoBehaviour
             {
                 trajectoryPositionsCurrent.Add(hit.point);
 
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Walls"))
+                int hitDirectObjectLayer = hit.collider.gameObject.layer;
+                if (hitDirectObjectLayer == LayerMask.NameToLayer("Walls"))
                 {
                     Vector3 reflectedDirection = Vector3.Reflect(castDirection, Vector3.right);
                     RaycastHit2D bounceHit = Hit(hit.point, reflectedDirection, false);
                     if (bounceHit.collider != null)
                     {
+                        int bounceHitObjectLayer = bounceHit.collider.gameObject.layer;
                         trajectoryPositionsCurrent.Add(bounceHit.point);
+                        if (bounceHitObjectLayer == LayerMask.NameToLayer("Bubbles"))
+                        {
+                            HandleBubbleHit(bounceHit);
+                        }
+                        else
+                        {
+                            bubbleField.HideBubbleOutline();
+                        }
                     }
                     else
                     {
+                        bubbleField.HideBubbleOutline();
                         trajectoryPositionsCurrent.Add(new Vector3(hit.point.x, hit.point.y, 0) + reflectedDirection);
                     }
                 }
+                else if (hitDirectObjectLayer == LayerMask.NameToLayer("Bubbles"))
+                {
+                    HandleBubbleHit(hit);
+                }
                 else
                 {
-
+                    Debug.LogError($"Hit unknown object with layer {hitDirectObjectLayer}");
                 }
+            }
+            else
+            {
+                bubbleField.HideBubbleOutline();
             }
 
             trajectoryLine.positionCount = trajectoryPositionsCurrent.Count;
             trajectoryLine.SetPositions(trajectoryPositionsCurrent.ToArray());
 
         }
+        else
+        {
+            //Can we not call it every frame?
+            bubbleField.HideBubbleOutline();
+
+            if (targetSlot.HasValue)
+            {
+
+            }
+        }
+    }
+
+    private void HandleBubbleHit(RaycastHit2D hit)
+    {
+        Bubble bubble = hit.collider.GetComponent<Bubble>();
+        if (bubble != null)
+        {
+            targetSlot = bubbleField.CanAttachBubbleTo(bubble, hit.point);
+        }
+        else
+        {
+            Debug.LogError($"Object {hit.collider.gameObject.name} on bubbles layer is not a Bubble!");
+        }
+
     }
 
     private RaycastHit2D Hit(Vector3 start, Vector3 direction, bool withWalls)
