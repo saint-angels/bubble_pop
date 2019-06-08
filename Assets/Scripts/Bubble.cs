@@ -18,10 +18,18 @@ public class Bubble : MonoBehaviour
         public Transform point;
     }
 
+    public BubbleType Type { get; private set; }
 
     [SerializeField] private new Collider2D collider;
-
     [SerializeField] private SidePoint[] bubbleSidePoints;
+    [SerializeField] private new SpriteRenderer renderer;
+
+    public void Init(BubbleType bubbleType)
+    {
+        Type = bubbleType;
+        renderer.color = Type.bubbleColor;
+
+    }
 
     public void SetInteractible(bool isInteractible)
     {

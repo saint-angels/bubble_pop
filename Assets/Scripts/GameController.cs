@@ -7,12 +7,13 @@ public class GameController : MonoBehaviour
     [SerializeField] private BubbleGrid grid = null;
     [SerializeField] private BubbleGun gun = null;
 
-    [Header("Config")]
+    [Header("Configs")]
     [SerializeField] private AnimationCfg animationCfg;
+    [SerializeField] private BubblesConfig bubblesConfig;
 
     private void Start()
     {
-        grid.Init();
+        grid.Init(bubblesConfig.types);
         gun.Init(grid, animationCfg);
     }
 }

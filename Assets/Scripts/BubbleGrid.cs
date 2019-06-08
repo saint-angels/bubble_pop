@@ -13,9 +13,11 @@ public class BubbleGrid : MonoBehaviour
     private const int fieldHeight = 7;
 
     private Bubble[,] bubbles = new Bubble[fieldWidth, fieldHeight];
+    private BubbleType[] bubbleTypes;
 
-    public void Init()
+    public void Init(BubbleType[] bubbleTypes)
     {
+        this.bubbleTypes = bubbleTypes;
         SpawnMore();
     }
 
@@ -113,11 +115,16 @@ public class BubbleGrid : MonoBehaviour
         {
             for (int y = 1; y < fieldHeight; y++)
             {
-                Vector3 spawnPosition = IndecesToPosition(x,y);
-                Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
-                newBubble.SetInteractible(true);
+                if (Random.value > .3f)
+                {
+                    BubbleType randomType = bubbleTypes[Random.Range(0, bubbleTypes.Length)];
+                    Vector3 spawnPosition = IndecesToPosition(x,y);
+                    Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
+                    newBubble.Init(randomType);
+                    newBubble.SetInteractible(true);
 
-                bubbles[x, y] = newBubble;
+                    bubbles[x, y] = newBubble;
+                }
             }
         }
     }

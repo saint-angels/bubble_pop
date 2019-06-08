@@ -116,6 +116,7 @@ MonoBehaviour:
     point: {fileID: 8873515768105795559}
   - sideType: 2
     point: {fileID: 4055934098514394161}
+  renderer: {fileID: 494703520056575545}
 --- !u!58 &6724667996857311628
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -173,7 +174,7 @@ GameObject:
   - component: {fileID: 8846070273015810316}
   - component: {fileID: 494703520056575545}
   m_Layer: 8
-  m_Name: New Sprite
+  m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

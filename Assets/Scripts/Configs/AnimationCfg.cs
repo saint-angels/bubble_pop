@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "AnimationCfg", menuName = "Config/AnimationCfg")]
+[CreateAssetMenu(fileName = "AnimationCfg", menuName = "Configs/AnimationCfg")]
 public class AnimationCfg : ScriptableObject
 {
     [Header("Shooting")]
