@@ -4,12 +4,15 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {   
-    [SerializeField] private BubbleField field = null;
+    [SerializeField] private BubbleGrid grid = null;
     [SerializeField] private BubbleGun gun = null;
+
+    [Header("Config")]
+    [SerializeField] private AnimationCfg animationCfg;
 
     private void Start()
     {
-        field.Init();
-        gun.Init(field);
+        grid.Init();
+        gun.Init(grid, animationCfg);
     }
 }

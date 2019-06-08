@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,24 +9,26 @@ public class BubbleGun : MonoBehaviour
     [SerializeField] private Bubble bubblePrefab = null;
     [SerializeField] private LineRenderer trajectoryLine = null;
 
-    private Bubble gunBubble;
+    private Bubble currentGunBubble;
     private List<Vector3> trajectoryPositionsCurrent = new List<Vector3>();
     private Vector2Int? targetSlot = null;
-    private BubbleField bubbleField;
+    private BubbleGrid grid;
 
-    public void Init(BubbleField bubbleField)
+    private AnimationCfg animationCfg;
+    public void Init(BubbleGrid grid, AnimationCfg animationCfg)
     {
-        this.bubbleField = bubbleField;
-        SetBubbleGun();
+        this.grid = grid;
+        this.animationCfg = animationCfg;
+        LoadGun();
     }
 
-    private void SetBubbleGun()
+    private void LoadGun()
     {
-        if (gunBubble == null)
+        if (currentGunBubble == null)
         {
             Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, bubbleGunPoint.position, Quaternion.identity);
             newBubble.SetInteractible(false);
-            gunBubble = newBubble;
+            currentGunBubble = newBubble;
         }
         else
         {
@@ -37,7 +40,7 @@ public class BubbleGun : MonoBehaviour
     {
         bool press = Input.GetMouseButton(0);
         trajectoryLine.gameObject.SetActive(press);
-        if (press)
+        if (press && currentGunBubble != null)
         {
             trajectoryPositionsCurrent.Clear();
             trajectoryPositionsCurrent.Add(bubbleGunPoint.position);
@@ -69,12 +72,12 @@ public class BubbleGun : MonoBehaviour
                         }
                         else
                         {
-                            bubbleField.HideBubbleOutline();
+                            grid.HideBubbleOutline();
                         }
                     }
                     else
                     {
-                        bubbleField.HideBubbleOutline();
+                        grid.HideBubbleOutline();
                         trajectoryPositionsCurrent.Add(new Vector3(hit.point.x, hit.point.y, 0) + reflectedDirection);
                     }
                 }
@@ -89,7 +92,7 @@ public class BubbleGun : MonoBehaviour
             }
             else
             {
-                bubbleField.HideBubbleOutline();
+                grid.HideBubbleOutline();
             }
 
             trajectoryLine.positionCount = trajectoryPositionsCurrent.Count;
@@ -99,18 +102,25 @@ public class BubbleGun : MonoBehaviour
         else
         {
             //Can we not call it every frame?
-            bubbleField.HideBubbleOutline();
+            grid.HideBubbleOutline();
 
-            if (targetSlot.HasValue)
+            bool canShoot = targetSlot.HasValue;
+            if (canShoot)
             {
+                Vector3 slotPosition = grid.IndecesToPosition(targetSlot.Value.x, targetSlot.Value.y);
+                var moveTween = currentGunBubble.transform.DOMove(slotPosition, animationCfg.shootBubbleFlyDuration);
+                Bubble flyingBubble = currentGunBubble;
+                Vector2Int gunTargetSlot = targetSlot.Value;
+                moveTween.OnComplete(() => 
+                {
+                    grid.AddBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y);
+                    LoadGun();
+                });
 
+                targetSlot = null;
+                currentGunBubble = null;
             }
         }
-    }
-
-    private void ShootBubble(Vector2 fieldSlot)
-    {
-        //bubbleField.AddBubble()
     }
 
     private void HandleBubbleHit(RaycastHit2D hit)
@@ -118,7 +128,7 @@ public class BubbleGun : MonoBehaviour
         Bubble bubble = hit.collider.GetComponent<Bubble>();
         if (bubble != null)
         {
-            targetSlot = bubbleField.CanAttachBubbleTo(bubble, hit.point);
+            targetSlot = grid.CanAttachBubbleTo(bubble, hit.point);
         }
         else
         {

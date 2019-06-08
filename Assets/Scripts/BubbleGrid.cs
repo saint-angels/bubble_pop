@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BubbleField : MonoBehaviour
+public class BubbleGrid : MonoBehaviour
 {
-
     [SerializeField] private Bubble bubblePrefab;
     [SerializeField] private Transform bubbleContainer;
     [SerializeField] private GameObject bubbleOutline;

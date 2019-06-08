@@ -316,7 +316,7 @@ GameObject:
   - component: {fileID: 599416329}
   - component: {fileID: 599416328}
   m_Layer: 0
-  m_Name: BubbleField
+  m_Name: Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -646,8 +646,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68809604520c82040af2a4a12c1050c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  field: {fileID: 599416328}
+  grid: {fileID: 599416328}
   gun: {fileID: 1340550863}
+  animationCfg: {fileID: 11400000, guid: a4ec0fc685a2d204d84a52c7a0369d0d, type: 2}
 --- !u!1 &1294957816
 GameObject:
   m_ObjectHideFlags: 0
