@@ -38,6 +38,8 @@ public class Bubble : MonoBehaviour
 
     private AnimationCfg animationCfg;
 
+    private Vector2Int[] attachSlotOffsets = new Vector2Int[] { Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
     public void Init(BubbleType bubbleType, AnimationCfg animationCfg, bool interactible)
     {
         this.animationCfg = animationCfg;
@@ -58,21 +60,16 @@ public class Bubble : MonoBehaviour
         collider.enabled = isInteractible;
     }
 
-    public BubbleSide ClosestSideToPoint(Vector3 point)
+    public List<Vector2Int> GetAttachSlotsPositions()
     {
-        float minSqDistance = float.MaxValue;
-        BubbleSide closestSide = BubbleSide.BOTTOM;
+        List<Vector2Int> slots = new List<Vector2Int>();
 
-        for (int i = 0; i < bubbleSidePoints.Length; i++)
+        for (int i = 0; i < attachSlotOffsets.Length; i++)
         {
-            float sqDistance = Vector3.SqrMagnitude(point - bubbleSidePoints[i].point.position);
-            if (sqDistance < minSqDistance)
-            {
-                closestSide = bubbleSidePoints[i].sideType;
-                minSqDistance = sqDistance;
-            }
+            slots.Add(Position + attachSlotOffsets[i]);
         }
-        return closestSide;
+
+        return slots;
     }
 
     public void Die(BubbleDeathType deathType)

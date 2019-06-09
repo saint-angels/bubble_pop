@@ -10,11 +10,12 @@ public class BubbleGrid : MonoBehaviour
     [SerializeField] private Transform bubbleContainer;
     [SerializeField] private GameObject bubbleOutline;
 
-    private const float bubbleSize = 1f;
+    private const float gridCellSize = 1f;
     private const int gridWidth = 7;
     private const int gridHeight = 7;
+    private float sqMaxSlotSnapDistance;
 
-    private Bubble[,] bubbles = new Bubble[gridWidth, gridHeight];
+    private Bubble[,] grid = new Bubble[gridWidth, gridHeight];
     private BubblesConfig bubblesConfig;
 
     private AnimationCfg animationCfg;
@@ -27,12 +28,14 @@ public class BubbleGrid : MonoBehaviour
         this.bubblesConfig = bubblesConfig;
         this.animationCfg = animationCfg;
 
+        this.sqMaxSlotSnapDistance = 2 * Mathf.Pow(gridCellSize, 2);
+
         SpawnMore();
     }
 
     public void AttachBubble(Bubble newBubble, int x, int y)
     {
-        bubbles[x, y] = newBubble;
+        grid[x, y] = newBubble;
         newBubble.transform.position = IndecesToPosition(x, y);
         newBubble.Position = new Vector2Int(x, y);
         newBubble.transform.SetParent(bubbleContainer, true);
@@ -79,7 +82,7 @@ public class BubbleGrid : MonoBehaviour
         List<Bubble> hangingBubbles = new List<Bubble>();
         for (int x = 0; x < gridWidth; x++)
         {
-            Bubble topBubble = bubbles[x, gridHeight - 1];
+            Bubble topBubble = grid[x, gridHeight - 1];
             if (topBubble != null)
             {
                 hangingBubbles.Add(topBubble);
@@ -91,7 +94,7 @@ public class BubbleGrid : MonoBehaviour
         {
             for (int y = 0; y < gridHeight; y++)
             {
-                Bubble b = bubbles[x, y];
+                Bubble b = grid[x, y];
                 if (b != null)
                 {
                     if (hangingBubbles.Contains(b) == false)
@@ -119,7 +122,7 @@ public class BubbleGrid : MonoBehaviour
 
     private void DestroyBubble(Bubble bubble, Bubble.BubbleDeathType deathType)
     {
-        bubbles[bubble.Position.x, bubble.Position.y] = null;
+        grid[bubble.Position.x, bubble.Position.y] = null;
         bubble.Die(deathType);
     }
 
@@ -130,42 +133,31 @@ public class BubbleGrid : MonoBehaviour
 
     public Vector2Int? CanAttachBubbleTo(Bubble bubble, Vector3 contactPoint)
     {
-        Bubble.BubbleSide bubbleSide = bubble.ClosestSideToPoint(contactPoint);
+        List<Vector2Int> attachSlotPositions = bubble.GetAttachSlotsPositions()
+                                                        .Where(attachPoint => PointOnGrid(attachPoint.x, attachPoint.y) && grid[attachPoint.x, attachPoint.y] == null)
+                                                        .OrderBy(attachPoint => Vector3.SqrMagnitude(IndecesToPosition(attachPoint.x, attachPoint.y) - contactPoint))
+                                                        .ToList();
 
-        int neighbourSlotX = bubble.Position.x;
-        int neighbourSlotY = bubble.Position.y;
-        switch (bubbleSide)
+        if (attachSlotPositions.Count > 0)
         {
-            case Bubble.BubbleSide.LEFT:
-                neighbourSlotX--;
-                break;
-            case Bubble.BubbleSide.RIGHT:
-                neighbourSlotX++;
-                break;
-            case Bubble.BubbleSide.BOTTOM:
-                neighbourSlotY--;
-                break;
-        }
-
-        if (PointOnGrid(neighbourSlotX, neighbourSlotY))
-        {
-            Bubble neighbourBubble = bubbles[neighbourSlotX, neighbourSlotY];
-            if (neighbourBubble == null)
+            Vector2Int bestSlotPoint = attachSlotPositions[0];
+            float sqDistanceToSlot = Vector3.SqrMagnitude(IndecesToPosition(bestSlotPoint.x, bestSlotPoint.y) - contactPoint);
+            if (sqDistanceToSlot < sqMaxSlotSnapDistance)
             {
-                bubbleOutline.transform.position = IndecesToPosition(neighbourSlotX, neighbourSlotY);
+                bubbleOutline.transform.position = IndecesToPosition(bestSlotPoint.x, bestSlotPoint.y);
                 bubbleOutline.SetActive(true);
-                return new Vector2Int(neighbourSlotX, neighbourSlotY);
+                return bestSlotPoint;
             }
         }
-        //Out of field, or slot is alredy occupied
-        return null;
 
+        //Out of grid, or all slots filled, or best slot is too far away
+        return null;
     }
 
     public Vector3 IndecesToPosition(int x, int y)
     {
-        float positionX = bubbleContainer.position.x + (bubbleSize / 2f) * x;
-        float positionY = bubbleContainer.position.y + (bubbleSize / 2f) * y;
+        float positionX = bubbleContainer.position.x + (gridCellSize / 2f) * x;
+        float positionY = bubbleContainer.position.y + (gridCellSize / 2f) * y;
         return new Vector3(positionX, positionY, 0);
     }
 
@@ -173,6 +165,7 @@ public class BubbleGrid : MonoBehaviour
     {
         List<Bubble> neighbours = new List<Bubble>();
 
+        //TODO: Move to bubble
         Vector2Int[] neighbourOffsets = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
         foreach (Vector2Int offset in neighbourOffsets)
@@ -181,7 +174,7 @@ public class BubbleGrid : MonoBehaviour
             int neighbourY = originBubble.Position.y + offset.y;
             if (PointOnGrid(neighbourX, neighbourY))
             {
-                Bubble neighbourBubble = bubbles[neighbourX, neighbourY];
+                Bubble neighbourBubble = grid[neighbourX, neighbourY];
                 if (neighbourBubble != null)
                 {
                     neighbours.Add(neighbourBubble);
@@ -229,7 +222,7 @@ public class BubbleGrid : MonoBehaviour
                     newBubble.Position = new Vector2Int(x, y);
                     Root.Instance.UI.AddHudToBubble(newBubble);
 
-                    bubbles[x, y] = newBubble;
+                    grid[x, y] = newBubble;
                 }
             }
         }

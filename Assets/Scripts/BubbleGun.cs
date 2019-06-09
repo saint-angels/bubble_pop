@@ -132,6 +132,10 @@ public class BubbleGun : MonoBehaviour
         if (bubble != null)
         {
             targetSlot = grid.CanAttachBubbleTo(bubble, hit.point);
+            if (targetSlot == null)
+            {
+                grid.HideBubbleOutline();
+            }
         }
         else
         {
