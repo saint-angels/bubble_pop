@@ -10,7 +10,6 @@ public class BubblesConfig : ScriptableObject
 
     public BubbleType GetTypeForSpawn()
     {
-        //return types[Random.Range(0, types.Length)]; ;
-        return types[0]; ;
+        return types[Random.Range(0, types.Length)]; ;
     }
 }

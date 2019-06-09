@@ -20,7 +20,7 @@ public class Bubble : MonoBehaviour
         public Transform point;
     }
 
-    public event Action OnDeath = () => { };
+    public event Action<Bubble> OnDeath = (bubble) => { };
 
     public BubbleType Type { get; private set; }
 
@@ -64,6 +64,7 @@ public class Bubble : MonoBehaviour
         var fallTween = transform.DOMove(transform.position + Vector3.down * 10f, animationCfg.bubbleFallDuration).SetEase(Ease.InOutQuint);
         fallTween.OnComplete(() =>
         {
+            OnDeath(this);
             ObjectPool.Despawn<Bubble>(this);
         });
     }
@@ -71,7 +72,7 @@ public class Bubble : MonoBehaviour
     private void Init(BubbleType bubbleType)
     {
         Type = bubbleType;
-        renderer.color = Type.bubbleColor;
+        renderer.color = Type.color;
     }
 
 

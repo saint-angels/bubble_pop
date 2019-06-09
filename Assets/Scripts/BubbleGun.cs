@@ -30,7 +30,7 @@ public class BubbleGun : MonoBehaviour
         {
             Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, bubbleGunPoint.position, Quaternion.identity);
             newBubble.Init(bubblesConfig.GetTypeForSpawn(), animationCfg, false);
-            newBubble.SetInteractible(false);
+            Root.Instance.UI.AddHudToBubble(newBubble);
             currentGunBubble = newBubble;
         }
         else

@@ -1250,6 +1250,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f46d20d355aee0440aa531a0a5a05488, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 1941835416}
   bubbleHudPrefab: {fileID: 6510523891476529758, guid: e50a50688e1e38a4fab34dbd58e4b5f9,
     type: 3}
   bubbleHudsContainer: {fileID: 1026084299}
