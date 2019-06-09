@@ -24,6 +24,7 @@ public class Bubble : MonoBehaviour
     public event Action<Bubble> OnDeath = (bubble) => { };
 
     public BubbleType Type { get; private set; }
+    public Vector2Int Position { get; set; }
 
     [SerializeField] private new Collider2D collider;
     [SerializeField] private SidePoint[] bubbleSidePoints;

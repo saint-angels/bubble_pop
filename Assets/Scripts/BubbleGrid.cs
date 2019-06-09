@@ -34,6 +34,7 @@ public class BubbleGrid : MonoBehaviour
     {
         bubbles[x, y] = newBubble;
         newBubble.transform.position = IndecesToPosition(x, y);
+        newBubble.Position = new Vector2Int(x, y);
         newBubble.transform.SetParent(bubbleContainer, true);
         newBubble.SetInteractible(true);
 
@@ -56,7 +57,7 @@ public class BubbleGrid : MonoBehaviour
                 Bubble mergingBubble = bubblesMatched[bIndex];
                 Tween mergeTween = mergingBubble.transform.DOMove(targetMergeBubble.transform.position, animationCfg.bubbleMergeDuration)
                                                           .SetEase(animationCfg.bubbleMergeEase);
-                mergeTween.OnComplete(() => DestroyBubble(mergingBubble));
+                mergeTween.OnComplete(() => BlowUpBubble(mergingBubble));
                 mergeSequence.Insert(0, mergeTween);
             }
             mergeSequence.OnComplete(() =>
@@ -67,14 +68,29 @@ public class BubbleGrid : MonoBehaviour
         }
     }
 
-    private void DestroyBubble(Bubble bubble)
+    private void GravityCheck()
     {
-        int bubbleX, bubbleY;
-        if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
+        List<Bubble> hangingBubbles = new List<Bubble>();
+        for (int x = 0; x < fieldWidth; x++)
         {
-            bubbles[bubbleX, bubbleY] = null;
-            bubble.Explode();
+            Bubble topBubble = bubbles[x, 0];
+            if (topBubble != null)
+            {
+                hangingBubbles.Add(topBubble);
+            }
         }
+
+    }
+
+    private void GravityCheckBubble(Bubble bubble, List<Bubble> hangingBubbles)
+    {
+
+    }
+
+    private void BlowUpBubble(Bubble bubble)
+    {
+        bubbles[bubble.Position.x, bubble.Position.y] = null;
+        bubble.Explode();
     }
 
     public void HideBubbleOutline()
@@ -86,42 +102,34 @@ public class BubbleGrid : MonoBehaviour
     {
         Bubble.BubbleSide bubbleSide = bubble.ClosestSideToPoint(contactPoint);
 
-        int bubbleX, bubbleY;
-        if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
+        int neighbourSlotX = bubble.Position.x;
+        int neighbourSlotY = bubble.Position.y;
+        switch (bubbleSide)
         {
-            int neighbourSlotX = bubbleX;
-            int neighbourSlotY = bubbleY;
-            switch (bubbleSide)
-            {
-                case Bubble.BubbleSide.LEFT:
-                    neighbourSlotX--;
-                    break;
-                case Bubble.BubbleSide.RIGHT:
-                    neighbourSlotX++;
-                    break;
-                case Bubble.BubbleSide.BOTTOM:
-                    neighbourSlotY--;
-                    break;
-            }
+            case Bubble.BubbleSide.LEFT:
+                neighbourSlotX--;
+                break;
+            case Bubble.BubbleSide.RIGHT:
+                neighbourSlotX++;
+                break;
+            case Bubble.BubbleSide.BOTTOM:
+                neighbourSlotY--;
+                break;
+        }
 
-            if (PointOnGrid(neighbourSlotX, neighbourSlotY))
-            {
-                Bubble neighbourBubble = bubbles[neighbourSlotX, neighbourSlotY];
-                if (neighbourBubble == null)
-                {
-                    bubbleOutline.transform.position = IndecesToPosition(neighbourSlotX, neighbourSlotY);
-                    bubbleOutline.SetActive(true);
-                    return new Vector2Int(neighbourSlotX, neighbourSlotY);
-                }
-            }
-            //Out of field, or slot is alredy occupied
-            return null;
-        }
-        else
+        if (PointOnGrid(neighbourSlotX, neighbourSlotY))
         {
-            Debug.LogError($"Can't find the bubble {bubble.gameObject.name} in the field!");
-            return null;
+            Bubble neighbourBubble = bubbles[neighbourSlotX, neighbourSlotY];
+            if (neighbourBubble == null)
+            {
+                bubbleOutline.transform.position = IndecesToPosition(neighbourSlotX, neighbourSlotY);
+                bubbleOutline.SetActive(true);
+                return new Vector2Int(neighbourSlotX, neighbourSlotY);
+            }
         }
+        //Out of field, or slot is alredy occupied
+        return null;
+
     }
 
     public Vector3 IndecesToPosition(int x, int y)
@@ -131,46 +139,44 @@ public class BubbleGrid : MonoBehaviour
         return new Vector3(positionX, positionY, 0);
     }
 
-    private void CheckMatches(Bubble originBubble, int x, int y)
+    private List<Bubble> NeighbourBubbles(Bubble originBubble)
     {
+        List<Bubble> neighbours = new List<Bubble>();
+
         Vector2Int[] neighbourOffsets = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
         foreach (Vector2Int offset in neighbourOffsets)
         {
-            int neighbourX = x + offset.x;
-            int neighbourY = y + offset.y;
+            int neighbourX = originBubble.Position.x + offset.x;
+            int neighbourY = originBubble.Position.y + offset.y;
             if (PointOnGrid(neighbourX, neighbourY))
             {
                 Bubble neighbourBubble = bubbles[neighbourX, neighbourY];
-                if (neighbourBubble != null && neighbourBubble.Type == originBubble.Type && bubblesMatchedSet.Contains(neighbourBubble) == false)
+                if (neighbourBubble != null)
                 {
-                    bubblesMatchedSet.Add(originBubble);
-                    bubblesMatchedSet.Add(neighbourBubble);
-                    CheckMatches(neighbourBubble, neighbourX, neighbourY);
+                    neighbours.Add(neighbourBubble);
                 }
             }
         }
+        return neighbours;
     }
 
-    private bool GetBubbleIndeces(Bubble bubble, out int bubbleX, out int bubbleY)
+    private void CheckMatches(Bubble originBubble, int x, int y)
     {
-        for (int x = 0; x < fieldWidth; x++)
+        List<Bubble> neighbours = NeighbourBubbles(originBubble);
+
+        Vector2Int[] neighbourOffsets = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+        foreach (var neighbourBubble in neighbours)
         {
-            for (int y = 0; y < fieldHeight; y++)
+
+            if (neighbourBubble.Type == originBubble.Type && bubblesMatchedSet.Contains(neighbourBubble) == false)
             {
-                if (bubbles[x,y] == bubble)
-                {
-                    bubbleX = x;
-                    bubbleY = y;
-                    return true;
-                }
+                bubblesMatchedSet.Add(originBubble);
+                bubblesMatchedSet.Add(neighbourBubble);
+                CheckMatches(neighbourBubble, neighbourBubble.Position.x, neighbourBubble.Position.y);
             }
         }
-
-        Debug.LogError($"Can't find the bubble {bubble.gameObject.name} in the field");
-        bubbleX = 0;
-        bubbleY = 0;
-        return false;
     }
 
     private bool PointOnGrid(int x, int y)
@@ -190,7 +196,7 @@ public class BubbleGrid : MonoBehaviour
                     Vector3 spawnPosition = IndecesToPosition(x,y);
                     Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
                     newBubble.Init(type, animationCfg, true);
-
+                    newBubble.Position = new Vector2Int(x, y);
                     Root.Instance.UI.AddHudToBubble(newBubble);
 
                     bubbles[x, y] = newBubble;
