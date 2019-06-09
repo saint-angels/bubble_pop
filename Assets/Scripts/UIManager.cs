@@ -20,6 +20,7 @@ public class UIManager : MonoBehaviour
 
         bubbleHuds.Add(bubble, newHud);
 
+        bubble.OnDeath -= Bubble_OnDeath;
         bubble.OnDeath += Bubble_OnDeath;
     }
 

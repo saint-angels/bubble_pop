@@ -45,7 +45,7 @@ public class BubbleGrid : MonoBehaviour
         if (bubblesMatchedSet.Count > 1)
         {
             List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
-            bubblesMatched.OrderByDescending((b1) => b1.transform.position.y);
+            bubblesMatched = bubblesMatched.OrderByDescending((b) => b.transform.position.y).ToList();
 
             Bubble targetMergeBubble = bubblesMatched[0];
 
@@ -66,6 +66,7 @@ public class BubbleGrid : MonoBehaviour
         if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
         {
             bubbles[bubbleX, bubbleY] = null;
+            print($"removed bubble {bubble.gameObject.name}");
             bubble.Explode();
         }
     }
