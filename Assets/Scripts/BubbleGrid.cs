@@ -126,7 +126,7 @@ public class BubbleGrid : MonoBehaviour
                 {
                     bubblesMatchedSet.Add(originBubble);
                     bubblesMatchedSet.Add(neighbourBubble);
-                    CheckMatches(neighbourBubble, x, y);
+                    CheckMatches(neighbourBubble, neighbourX, neighbourY);
                 }
             }
         }
