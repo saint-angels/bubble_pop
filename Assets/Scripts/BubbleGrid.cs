@@ -11,10 +11,10 @@ public class BubbleGrid : MonoBehaviour
     [SerializeField] private GameObject bubbleOutline;
 
     private const float bubbleSize = 1f;
-    private const int fieldWidth = 7;
-    private const int fieldHeight = 7;
+    private const int gridWidth = 7;
+    private const int gridHeight = 7;
 
-    private Bubble[,] bubbles = new Bubble[fieldWidth, fieldHeight];
+    private Bubble[,] bubbles = new Bubble[gridWidth, gridHeight];
     private BubblesConfig bubblesConfig;
 
     private AnimationCfg animationCfg;
@@ -57,40 +57,70 @@ public class BubbleGrid : MonoBehaviour
                 Bubble mergingBubble = bubblesMatched[bIndex];
                 Tween mergeTween = mergingBubble.transform.DOMove(targetMergeBubble.transform.position, animationCfg.bubbleMergeDuration)
                                                           .SetEase(animationCfg.bubbleMergeEase);
-                mergeTween.OnComplete(() => BlowUpBubble(mergingBubble));
+                mergeTween.OnComplete(() => DestroyBubble(mergingBubble, Bubble.BubbleDeathType.EXPLOSION));
                 mergeSequence.Insert(0, mergeTween);
             }
             mergeSequence.OnComplete(() =>
             {
                 BubbleType newType = bubblesConfig.GetUpgradedType(targetMergeBubble.Type, bubblesMatched.Count - 1);
                 targetMergeBubble.Upgrade(newType);
+
+                GravityCheck();
             });
+        }
+        else
+        {
+            GravityCheck();
         }
     }
 
     private void GravityCheck()
     {
         List<Bubble> hangingBubbles = new List<Bubble>();
-        for (int x = 0; x < fieldWidth; x++)
+        for (int x = 0; x < gridWidth; x++)
         {
-            Bubble topBubble = bubbles[x, 0];
+            Bubble topBubble = bubbles[x, gridHeight - 1];
             if (topBubble != null)
             {
                 hangingBubbles.Add(topBubble);
+                GravityCheckBubble(topBubble, hangingBubbles);
             }
         }
 
+        for (int x = 0; x < gridWidth; x++)
+        {
+            for (int y = 0; y < gridHeight; y++)
+            {
+                Bubble b = bubbles[x, y];
+                if (b != null)
+                {
+                    if (hangingBubbles.Contains(b) == false)
+                    {
+                        DestroyBubble(b, Bubble.BubbleDeathType.FALL);
+                    }
+
+                }
+            }
+        }
     }
 
     private void GravityCheckBubble(Bubble bubble, List<Bubble> hangingBubbles)
     {
-
+        List<Bubble> neighbours = NeighbourBubbles(bubble);
+        foreach (Bubble neighbourBubble in neighbours)
+        {
+            if (hangingBubbles.Contains(neighbourBubble) == false)
+            {
+                hangingBubbles.Add(neighbourBubble);
+                GravityCheckBubble(neighbourBubble, hangingBubbles);
+            }
+        }
     }
 
-    private void BlowUpBubble(Bubble bubble)
+    private void DestroyBubble(Bubble bubble, Bubble.BubbleDeathType deathType)
     {
         bubbles[bubble.Position.x, bubble.Position.y] = null;
-        bubble.Explode();
+        bubble.Die(deathType);
     }
 
     public void HideBubbleOutline()
@@ -181,14 +211,14 @@ public class BubbleGrid : MonoBehaviour
 
     private bool PointOnGrid(int x, int y)
     {
-        return x < fieldWidth && 0 <= x && y < fieldHeight && 0 <= y;
+        return x < gridWidth && 0 <= x && y < gridHeight && 0 <= y;
     }
 
     private void SpawnMore()
     {
-        for (int x = 0; x < fieldWidth - 1; x++)
+        for (int x = 0; x < gridWidth - 1; x++)
         {
-            for (int y = 1; y < fieldHeight; y++)
+            for (int y = 1; y < gridHeight; y++)
             {
                 if (Random.value > .3f)
                 {
@@ -203,5 +233,8 @@ public class BubbleGrid : MonoBehaviour
                 }
             }
         }
+
+        //TODO: Spawn only bubbles that can hang
+        GravityCheck();
     }
 }

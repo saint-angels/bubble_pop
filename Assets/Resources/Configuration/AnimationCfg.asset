@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shootBubbleFlyDuration: 0.2
   shootBubbleFlyEase: 16
-  bubbleFallDuration: 1
+  bubbleFallDuration: 0.5
   bubbleFallEase: 16
   bubbleMergeDuration: 0.2
   bubbleMergeEase: 16

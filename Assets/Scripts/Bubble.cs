@@ -13,6 +13,12 @@ public class Bubble : MonoBehaviour
         BOTTOM
     }
 
+    public enum BubbleDeathType
+    {
+        EXPLOSION,
+        FALL
+    }
+
     [System.Serializable]
     private struct SidePoint
     {
@@ -51,7 +57,7 @@ public class Bubble : MonoBehaviour
     {
         collider.enabled = isInteractible;
     }
-    
+
     public BubbleSide ClosestSideToPoint(Vector3 point)
     {
         float minSqDistance = float.MaxValue;
@@ -69,21 +75,29 @@ public class Bubble : MonoBehaviour
         return closestSide;
     }
 
-    public void Fall()
+    public void Die(BubbleDeathType deathType)
     {
-        var fallTween = transform.DOMove(transform.position + Vector3.down * 10f, animationCfg.bubbleFallDuration).SetEase(Ease.InOutQuint);
-        fallTween.OnComplete(() =>
+        SetInteractible(false);
+
+        switch (deathType)
         {
-            Die();
-        });
+            case BubbleDeathType.EXPLOSION:
+                Death();
+                break;
+            case BubbleDeathType.FALL:
+                var fallTween = transform.DOMove(transform.position + Vector3.down * 10f, animationCfg.bubbleFallDuration).SetEase(Ease.InOutQuint);
+                fallTween.OnComplete(() =>
+                {
+                    Death();
+                });
+                break;
+            default:
+                Debug.LogError($"Unknown death type {deathType}");
+                break;
+        }
     }
 
-    public void Explode()
-    {
-        Die();
-    }
-
-    private void Die()
+    private void Death()
     {
         OnDeath(this);
         ObjectPool.Despawn<Bubble>(this);
