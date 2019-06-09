@@ -22,6 +22,14 @@ public class UIManager : MonoBehaviour
 
         bubble.OnDeath -= Bubble_OnDeath;
         bubble.OnDeath += Bubble_OnDeath;
+
+        bubble.OnUpgrade -= Bubble_OnUpgrade;
+        bubble.OnUpgrade += Bubble_OnUpgrade;
+    }
+
+    private void Bubble_OnUpgrade(Bubble bubble)
+    {
+        bubbleHuds[bubble].Init(bubble.Type);
     }
 
     private void Bubble_OnDeath(Bubble bubble)

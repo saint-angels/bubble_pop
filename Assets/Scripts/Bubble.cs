@@ -20,6 +20,7 @@ public class Bubble : MonoBehaviour
         public Transform point;
     }
 
+    public event Action<Bubble> OnUpgrade = (bubble) => { };
     public event Action<Bubble> OnDeath = (bubble) => { };
 
     public BubbleType Type { get; private set; }
@@ -33,8 +34,16 @@ public class Bubble : MonoBehaviour
     public void Init(BubbleType bubbleType, AnimationCfg animationCfg, bool interactible)
     {
         this.animationCfg = animationCfg;
-        Init(bubbleType);
+        Type = bubbleType;
+        renderer.color = Type.color;
         SetInteractible(interactible);
+    }
+
+    public void Upgrade(BubbleType newBubbleType)
+    {
+        Type = newBubbleType;
+        renderer.color = Type.color;
+        OnUpgrade(this);
     }
 
     public void SetInteractible(bool isInteractible)
@@ -77,11 +86,5 @@ public class Bubble : MonoBehaviour
     {
         OnDeath(this);
         ObjectPool.Despawn<Bubble>(this);
-    }
-
-    private void Init(BubbleType bubbleType)
-    {
-        Type = bubbleType;
-        renderer.color = Type.color;
     }
 }

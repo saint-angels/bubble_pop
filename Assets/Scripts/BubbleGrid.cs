@@ -49,6 +49,7 @@ public class BubbleGrid : MonoBehaviour
 
             Bubble targetMergeBubble = bubblesMatched[0];
 
+            Sequence mergeSequence = DOTween.Sequence();
             //Merge bubbles & destroy all except first
             for (int bIndex = bubblesMatched.Count - 1; bIndex >= 1; bIndex--)
             {
@@ -56,7 +57,13 @@ public class BubbleGrid : MonoBehaviour
                 Tween mergeTween = mergingBubble.transform.DOMove(targetMergeBubble.transform.position, animationCfg.bubbleMergeDuration)
                                                           .SetEase(animationCfg.bubbleMergeEase);
                 mergeTween.OnComplete(() => DestroyBubble(mergingBubble));
+                mergeSequence.Insert(0, mergeTween);
             }
+            mergeSequence.OnComplete(() =>
+            {
+                BubbleType newType = bubblesConfig.GetUpgradedType(targetMergeBubble.Type, bubblesMatched.Count - 1);
+                targetMergeBubble.Upgrade(newType);
+            });
         }
     }
 
