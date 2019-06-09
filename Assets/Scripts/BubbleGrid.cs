@@ -66,7 +66,6 @@ public class BubbleGrid : MonoBehaviour
         if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
         {
             bubbles[bubbleX, bubbleY] = null;
-            print($"removed bubble {bubble.gameObject.name}");
             bubble.Explode();
         }
     }
