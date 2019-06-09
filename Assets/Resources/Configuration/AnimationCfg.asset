@@ -13,3 +13,8 @@ MonoBehaviour:
   m_Name: AnimationCfg
   m_EditorClassIdentifier: 
   shootBubbleFlyDuration: 0.2
+  shootBubbleFlyEase: 16
+  bubbleFallDuration: 1
+  bubbleFallEase: 16
+  bubbleMergeDuration: 0.2
+  bubbleMergeEase: 16

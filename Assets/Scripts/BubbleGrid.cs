@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using DG.Tweening;
 
 public class BubbleGrid : MonoBehaviour
 {
@@ -40,10 +42,21 @@ public class BubbleGrid : MonoBehaviour
 
         CheckMatches(newBubble, x, y);
 
-        List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
-        for (int bubbleIndex = bubblesMatched.Count - 1; bubbleIndex >= 0; bubbleIndex--)
+        if (bubblesMatchedSet.Count > 1)
         {
-            DestroyBubble(bubblesMatched[bubbleIndex]);
+            List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
+            bubblesMatched.OrderByDescending((b1) => b1.transform.position.y);
+
+            Bubble targetMergeBubble = bubblesMatched[0];
+
+            //Merge bubbles & destroy all except first
+            for (int bIndex = bubblesMatched.Count - 1; bIndex >= 1; bIndex--)
+            {
+                Bubble mergingBubble = bubblesMatched[bIndex];
+                Tween mergeTween = mergingBubble.transform.DOMove(targetMergeBubble.transform.position, animationCfg.bubbleMergeDuration)
+                                                          .SetEase(animationCfg.bubbleMergeEase);
+                mergeTween.OnComplete(() => DestroyBubble(mergingBubble));
+            }
         }
     }
 
@@ -53,7 +66,7 @@ public class BubbleGrid : MonoBehaviour
         if (GetBubbleIndeces(bubble, out bubbleX, out bubbleY))
         {
             bubbles[bubbleX, bubbleY] = null;
-            bubble.Fall();
+            bubble.Explode();
         }
     }
 

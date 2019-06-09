@@ -64,26 +64,24 @@ public class Bubble : MonoBehaviour
         var fallTween = transform.DOMove(transform.position + Vector3.down * 10f, animationCfg.bubbleFallDuration).SetEase(Ease.InOutQuint);
         fallTween.OnComplete(() =>
         {
-            OnDeath(this);
-            ObjectPool.Despawn<Bubble>(this);
+            Die();
         });
+    }
+
+    public void Explode()
+    {
+        Die();
+    }
+
+    private void Die()
+    {
+        OnDeath(this);
+        ObjectPool.Despawn<Bubble>(this);
     }
 
     private void Init(BubbleType bubbleType)
     {
         Type = bubbleType;
         renderer.color = Type.color;
-    }
-
-
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
