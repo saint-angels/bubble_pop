@@ -30,7 +30,7 @@ public class Bubble : MonoBehaviour
     public event Action<Bubble> OnDeath = (bubble) => { };
 
     public BubbleType Type { get; private set; }
-    public Vector2Int Position { get; set; }
+    public Vector2Int Coords { get; set; }
 
     [SerializeField] private new Collider2D collider;
     [SerializeField] private SidePoint[] bubbleSidePoints;
@@ -38,7 +38,16 @@ public class Bubble : MonoBehaviour
 
     private AnimationCfg animationCfg;
 
-    private Vector2Int[] attachSlotOffsets = new Vector2Int[] { Vector2Int.down, Vector2Int.left, Vector2Int.right };
+    private Vector2Int[] neighbourOffsets = new Vector2Int[]
+    {
+        new Vector2Int(2,0),
+        new Vector2Int(1,-1),
+        new Vector2Int(-1,-1),
+        new Vector2Int(-2,0),
+        new Vector2Int(-1,1),
+        new Vector2Int(1,1),
+
+    };
 
     public void Init(BubbleType bubbleType, AnimationCfg animationCfg, bool interactible)
     {
@@ -60,13 +69,13 @@ public class Bubble : MonoBehaviour
         collider.enabled = isInteractible;
     }
 
-    public List<Vector2Int> GetAttachSlotsPositions()
+    public Vector2Int[] GetAttachSlotsPositions()
     {
-        List<Vector2Int> slots = new List<Vector2Int>();
+        Vector2Int[] slots = new Vector2Int[neighbourOffsets.Length];
 
-        for (int i = 0; i < attachSlotOffsets.Length; i++)
+        for (int i = 0; i < neighbourOffsets.Length; i++)
         {
-            slots.Add(Position + attachSlotOffsets[i]);
+            slots[i] = Coords + neighbourOffsets[i];
         }
 
         return slots;
