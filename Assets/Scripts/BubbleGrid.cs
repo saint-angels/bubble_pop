@@ -7,12 +7,14 @@ using DG.Tweening;
 public class BubbleGrid : MonoBehaviour
 {
     [SerializeField] private Bubble bubblePrefab;
-    [SerializeField] private Transform bubbleContainer;
+    [SerializeField] private Transform gridOriginPoint;
     [SerializeField] private GameObject bubbleOutline;
 
-    private const float circleSize = 1f;
-    private const int gridWidth = 7;
-    private const int gridHeight = 7;
+    private const float hexSize = .35f;
+    private const float bubbleSize = hexSize * 1.732f; //Make bubble fit into a hex
+    private const int gridWidth = 12;
+    private const int gridHeight = 10;
+    private const int topUnderstroyableLinesHeight = 3; //Lines that are restored every turn
     private float sqMaxSlotSnapDistance;
 
     //Hex grid in "doubled" coordinates
@@ -29,20 +31,20 @@ public class BubbleGrid : MonoBehaviour
         this.bubblesConfig = bubblesConfig;
         this.animationCfg = animationCfg;
 
-        this.sqMaxSlotSnapDistance = Mathf.Pow(circleSize, 2);
+        bubbleOutline.transform.localScale = new Vector3(bubbleSize, bubbleSize, 1);
+
+        this.sqMaxSlotSnapDistance = Mathf.Pow(bubbleSize, 2);
 
         SpawnMore();
     }
 
     public void AttachBubble(Bubble newBubble, int x, int y)
     {
-        grid[x, y] = newBubble;
+        SetBubbleAtGridIndeces(newBubble, x, y);
         newBubble.transform.position = IndecesToPosition(x, y);
-        newBubble.Coords = new Vector2Int(x, y);
-        newBubble.transform.SetParent(bubbleContainer, true);
         newBubble.SetInteractible(true);
 
-        //TODO: If attach bubble gonna be called not only from gun, don't clean hashset here
+        //TODO: If attach bubble gonna be called not only from gun(multiple matches of diff numbers in a row?), don't clean hashset here
         bubblesMatchedSet.Clear();
 
         CheckMatches(newBubble, x, y);
@@ -69,17 +71,19 @@ public class BubbleGrid : MonoBehaviour
                 BubbleType newType = bubblesConfig.GetUpgradedType(targetMergeBubble.Type, bubblesMatched.Count - 1);
                 targetMergeBubble.Upgrade(newType);
 
-                GravityCheck();
+                FinishTurn();
             });
         }
         else
         {
-            GravityCheck();
+            FinishTurn();
         }
     }
 
-    private void GravityCheck()
+    //TODO: Return promise?
+    private void FinishTurn()
     {
+        //Check gravity
         List<Bubble> hangingBubbles = new List<Bubble>();
         for (int x = 0; x < gridWidth; x++)
         {
@@ -87,7 +91,7 @@ public class BubbleGrid : MonoBehaviour
             if (topBubble != null)
             {
                 hangingBubbles.Add(topBubble);
-                GravityCheckBubble(topBubble, hangingBubbles);
+                GravityBubbleBubble(topBubble, hangingBubbles);
             }
         }
 
@@ -106,9 +110,80 @@ public class BubbleGrid : MonoBehaviour
                 }
             }
         }
+
+        //Shift, if needed
+        bool bottomRowUsed = false;
+        for (int x = 0; x < gridWidth; x++)
+        {
+            Bubble b = grid[x, 0];
+            if (b != null)
+            {
+                bottomRowUsed = true;
+                break;
+            }
+        }
+
+        if (bottomRowUsed)
+        {
+            Sequence bubbleShiftSequence = DOTween.Sequence();
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = gridHeight - 1; y >= 0; y--)
+                {
+                    Bubble bubble = grid[x, y];
+                    if (bubble != null)
+                    {
+                        bool topHiddenRows = gridHeight - 2 <= y;
+                        if (topHiddenRows)
+                        {
+                            DestroyBubble(bubble, Bubble.BubbleDeathType.EXPLOSION);
+                        }
+                        else
+                        {
+                            SetBubbleAtGridIndeces(bubble, x, y + 2);
+                            Vector3 newBubblePosition = IndecesToPosition(x, y + 2);
+                            Tween shiftUpTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftUpDuration).SetEase(animationCfg.bubbleShiftUpEase);
+                            bubbleShiftSequence.Insert(0, shiftUpTween);
+                        }
+                    }
+                }
+            }
+        }
+
+        //Add top bubbles, if needed
+        for (int x = 0; x < gridWidth; x++)
+        {
+            for (int y = gridHeight - topUnderstroyableLinesHeight; y < gridHeight; y++)
+            {
+                if (grid[x, y] == null && PointOnHexGrid(x, y))
+                {
+                    Bubble newBubble = CreateNewBubble(true);
+                    newBubble.transform.position = IndecesToPosition(x, y);
+                    SetBubbleAtGridIndeces(newBubble, x, y);
+                }
+            }
+        }
     }
 
-    private void GravityCheckBubble(Bubble bubble, List<Bubble> hangingBubbles)
+    private void SetBubbleAtGridIndeces(Bubble bubble, int x, int y)
+    {
+        if (grid[x, y] != null)
+        {
+            Debug.LogWarning($"Overwriting bubble at grid {x}:{y} with bubble at {bubble.Indeces.x}:{bubble.Indeces.y}");
+        }
+
+        if (bubble.Indeces != Vector2Int.zero && grid[bubble.Indeces.x, bubble.Indeces.y] != bubble)
+        {
+            Debug.LogWarning($"Moving bubble from position {bubble.Indeces.x}:{bubble.Indeces.y} where bubble is not that? Eh?");
+        }
+
+        grid[bubble.Indeces.x, bubble.Indeces.y] = null;
+
+        grid[x, y] = bubble;
+        bubble.Indeces = new Vector2Int(x, y);
+    }
+
+    private void GravityBubbleBubble(Bubble bubble, List<Bubble> hangingBubbles)
     {
         List<Bubble> neighbours = NeighbourBubbles(bubble);
         foreach (Bubble neighbourBubble in neighbours)
@@ -116,26 +191,30 @@ public class BubbleGrid : MonoBehaviour
             if (hangingBubbles.Contains(neighbourBubble) == false)
             {
                 hangingBubbles.Add(neighbourBubble);
-                GravityCheckBubble(neighbourBubble, hangingBubbles);
+                GravityBubbleBubble(neighbourBubble, hangingBubbles);
             }
         }
     }
 
     private void DestroyBubble(Bubble bubble, Bubble.BubbleDeathType deathType)
     {
-        grid[bubble.Coords.x, bubble.Coords.y] = null;
+        grid[bubble.Indeces.x, bubble.Indeces.y] = null;
         bubble.Die(deathType);
     }
 
-    public void HideBubbleOutline()
+    public void SetBubbleOutlineActive(bool isActive, Vector2Int? coordinates = null)
     {
-        bubbleOutline.SetActive(false);
+        bubbleOutline.SetActive(isActive);
+        if (coordinates.HasValue)
+        {
+            bubbleOutline.transform.position = IndecesToPosition(coordinates.Value.x, coordinates.Value.y);
+        }
     }
 
     public Vector2Int? CanAttachBubbleTo(Bubble bubble, Vector3 contactPoint)
     {
-        List<Vector2Int> attachSlotPositions = bubble.GetAttachSlotsPositions()
-                                                        .Where(attachPoint => PointOnGrid(attachPoint.x, attachPoint.y) && grid[attachPoint.x, attachPoint.y] == null)
+        List<Vector2Int> attachSlotPositions = bubble.GetNeighbourSlotIndeces()
+                                                        .Where(attachPoint => PointOnHexGrid(attachPoint.x, attachPoint.y) && grid[attachPoint.x, attachPoint.y] == null)
                                                         .OrderBy(attachPoint => Vector3.SqrMagnitude(IndecesToPosition(attachPoint.x, attachPoint.y) - contactPoint))
                                                         .ToList();
 
@@ -145,8 +224,7 @@ public class BubbleGrid : MonoBehaviour
             float sqDistanceToSlot = Vector3.SqrMagnitude(IndecesToPosition(bestSlotPoint.x, bestSlotPoint.y) - contactPoint);
             if (sqDistanceToSlot < sqMaxSlotSnapDistance)
             {
-                bubbleOutline.transform.position = IndecesToPosition(bestSlotPoint.x, bestSlotPoint.y);
-                bubbleOutline.SetActive(true);
+                SetBubbleOutlineActive(true, bestSlotPoint);
                 return bestSlotPoint;
             }
         }
@@ -157,32 +235,34 @@ public class BubbleGrid : MonoBehaviour
 
     public Vector3 IndecesToPosition(int x, int y)
     {
-        float hexSize = (circleSize / 2f) / Mathf.Sqrt(3f);
-
-        //Is it calculating from the top, or from bottom?
         float positionX = hexSize * Mathf.Sqrt(3f)/2f * x;
-        float positionY = hexSize * 3f / 2f * y;
+        float positionY = hexSize * 3f/2f * y;
 
-        positionX += bubbleContainer.position.x;
-        positionY += bubbleContainer.position.y;
-
+        positionX += gridOriginPoint.position.x;
+        positionY += gridOriginPoint.position.y;
         return new Vector3(positionX, positionY, 0);
-    }   
+    }
+
+    public Bubble CreateNewBubble(bool interactive)
+    {
+        BubbleType type = bubblesConfig.GetTypeForSpawn();
+        Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
+        newBubble.Indeces = Vector2Int.zero;
+        newBubble.transform.localScale = new Vector3(bubbleSize, bubbleSize, 1f);
+        newBubble.Init(type, animationCfg, interactive);
+        Root.Instance.UI.AddHudToBubble(newBubble);
+        return newBubble;
+    }
 
     private List<Bubble> NeighbourBubbles(Bubble originBubble)
     {
         List<Bubble> neighbours = new List<Bubble>();
 
-        //TODO: Move to bubble
-        Vector2Int[] neighbourOffsets = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-
-        foreach (Vector2Int offset in neighbourOffsets)
+        foreach (Vector2Int offset in originBubble.GetNeighbourSlotIndeces())
         {
-            int neighbourX = originBubble.Coords.x + offset.x;
-            int neighbourY = originBubble.Coords.y + offset.y;
-            if (PointOnGrid(neighbourX, neighbourY))
+            if (PointOnHexGrid(offset.x, offset.y))
             {
-                Bubble neighbourBubble = grid[neighbourX, neighbourY];
+                Bubble neighbourBubble = grid[offset.x, offset.y];
                 if (neighbourBubble != null)
                 {
                     neighbours.Add(neighbourBubble);
@@ -196,8 +276,6 @@ public class BubbleGrid : MonoBehaviour
     {
         List<Bubble> neighbours = NeighbourBubbles(originBubble);
 
-        Vector2Int[] neighbourOffsets = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-
         foreach (var neighbourBubble in neighbours)
         {
 
@@ -205,33 +283,28 @@ public class BubbleGrid : MonoBehaviour
             {
                 bubblesMatchedSet.Add(originBubble);
                 bubblesMatchedSet.Add(neighbourBubble);
-                CheckMatches(neighbourBubble, neighbourBubble.Coords.x, neighbourBubble.Coords.y);
+                CheckMatches(neighbourBubble, neighbourBubble.Indeces.x, neighbourBubble.Indeces.y);
             }
         }
     }
 
-    private bool PointOnGrid(int x, int y)
+    private bool PointOnHexGrid(int x, int y)
     {
-        return x < gridWidth && 0 <= x && y < gridHeight && 0 <= y;
+        bool doubledHexGridCheck = (x + y) % 2 == 0;
+        return doubledHexGridCheck && x < gridWidth && 0 <= x && y < gridHeight && 0 <= y;
     }
 
     private void SpawnMore()
     {
-        for (int x = 0; x < gridWidth; x += 2)
+        for (int x = 0; x < gridWidth; x++)
         {
-            //int y = 0;
             for (int y = 1; y < gridHeight; y++)
             {
-                //if (Random.value > .3f)
+                if (PointOnHexGrid(x,y))
                 {
-                    BubbleType type = bubblesConfig.GetTypeForSpawn();
-                    Vector3 spawnPosition = IndecesToPosition(x,y);
-                    Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, spawnPosition, Quaternion.identity, bubbleContainer);
-                    newBubble.Init(type, animationCfg, true);
-                    newBubble.Coords = new Vector2Int(x, y);
-                    Root.Instance.UI.AddHudToBubble(newBubble);
-
-                    grid[x, y] = newBubble;
+                    Bubble newBubble = CreateNewBubble(true);
+                    newBubble.transform.position = IndecesToPosition(x, y);
+                    SetBubbleAtGridIndeces(newBubble, x, y);
                 }
             }
         }

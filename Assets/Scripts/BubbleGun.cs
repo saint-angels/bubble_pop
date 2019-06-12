@@ -28,9 +28,8 @@ public class BubbleGun : MonoBehaviour
     {
         if (currentGunBubble == null)
         {
-            Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, bubbleGunPoint.position, Quaternion.identity);
-            newBubble.Init(bubblesConfig.GetTypeForSpawn(), animationCfg, false);
-            Root.Instance.UI.AddHudToBubble(newBubble);
+            Bubble newBubble = grid.CreateNewBubble(false);
+            newBubble.transform.position = bubbleGunPoint.position;
             currentGunBubble = newBubble;
         }
         else
@@ -75,12 +74,12 @@ public class BubbleGun : MonoBehaviour
                         }
                         else
                         {
-                            grid.HideBubbleOutline();
+                            grid.SetBubbleOutlineActive(false);
                         }
                     }
                     else
                     {
-                        grid.HideBubbleOutline();
+                        grid.SetBubbleOutlineActive(false);
                         trajectoryPositionsCurrent.Add(new Vector3(hit.point.x, hit.point.y, 0) + reflectedDirection);
                     }
                 }
@@ -95,7 +94,7 @@ public class BubbleGun : MonoBehaviour
             }
             else
             {
-                grid.HideBubbleOutline();
+                grid.SetBubbleOutlineActive(false);
             }
 
             trajectoryLine.positionCount = trajectoryPositionsCurrent.Count;
@@ -105,7 +104,7 @@ public class BubbleGun : MonoBehaviour
         else
         {
             //Can we not call it every frame?
-            grid.HideBubbleOutline();
+            grid.SetBubbleOutlineActive(false);
 
             bool canShoot = targetSlot.HasValue;
             if (canShoot)
@@ -134,7 +133,7 @@ public class BubbleGun : MonoBehaviour
             targetSlot = grid.CanAttachBubbleTo(bubble, hit.point);
             if (targetSlot == null)
             {
-                grid.HideBubbleOutline();
+                grid.SetBubbleOutlineActive(false);
             }
         }
         else

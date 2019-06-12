@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[SelectionBase]
 public class Bubble : MonoBehaviour
 {
     public enum BubbleSide
@@ -30,7 +31,7 @@ public class Bubble : MonoBehaviour
     public event Action<Bubble> OnDeath = (bubble) => { };
 
     public BubbleType Type { get; private set; }
-    public Vector2Int Coords { get; set; }
+    public Vector2Int Indeces { get; set; }
 
     [SerializeField] private new Collider2D collider;
     [SerializeField] private SidePoint[] bubbleSidePoints;
@@ -69,13 +70,13 @@ public class Bubble : MonoBehaviour
         collider.enabled = isInteractible;
     }
 
-    public Vector2Int[] GetAttachSlotsPositions()
+    public Vector2Int[] GetNeighbourSlotIndeces()
     {
         Vector2Int[] slots = new Vector2Int[neighbourOffsets.Length];
 
         for (int i = 0; i < neighbourOffsets.Length; i++)
         {
-            slots[i] = Coords + neighbourOffsets[i];
+            slots[i] = Indeces + neighbourOffsets[i];
         }
 
         return slots;
