@@ -13,9 +13,14 @@ public class BubbleGrid : MonoBehaviour
     private const float hexSize = .35f;
     private const float bubbleSize = hexSize * 1.732f; //Make bubble fit into a hex
     private const int gridWidth = 12;
-    private const int gridHeight = 10;
-    private const int topUnderstroyableLinesHeight = 3; //Lines that are restored every turn
+    private const int gridHeight = 14;
+    private const int topUnderstroyableLinesHeight = 6; //Lines that are restored every turn
+    private const float shiftDownChance = .5f;
     private float sqMaxSlotSnapDistance;
+
+    //Shift down settings
+    int shiftDownFreeLinesRequired = 3;
+
 
     //Hex grid in "doubled" coordinates
     private Bubble[,] grid = new Bubble[gridWidth, gridHeight];
@@ -40,7 +45,7 @@ public class BubbleGrid : MonoBehaviour
 
     public void AttachBubble(Bubble newBubble, int x, int y)
     {
-        SetBubbleAtGridIndeces(newBubble, x, y);
+        SetBubbleGridIndeces(newBubble, x, y);
         newBubble.transform.position = IndecesToPosition(x, y);
         newBubble.SetInteractible(true);
 
@@ -111,21 +116,35 @@ public class BubbleGrid : MonoBehaviour
             }
         }
 
-        //Shift, if needed
-        bool bottomRowUsed = false;
-        for (int x = 0; x < gridWidth; x++)
+        //Find number of free lines
+        int bottomFreeLinesCount = 0;
+        bool bottomBubbleFound = false;
+        for (int y = 0; y < gridHeight; y++)
         {
-            Bubble b = grid[x, 0];
-            if (b != null)
+            for (int x = 0; x < gridWidth; x++)
             {
-                bottomRowUsed = true;
+                if (grid[x, y] != null)
+                {
+                    bottomBubbleFound = true;
+                }
+            }
+            if (bottomBubbleFound)
+            {
                 break;
             }
+            else
+            {
+                bottomFreeLinesCount++;
+            }
         }
+        Debug.Log($"Bottom free lines number:{bottomFreeLinesCount}");
+            
 
-        if (bottomRowUsed)
+
+        //Shift up, if player used whole height of the grid
+        if (bottomFreeLinesCount == 0)
         {
-            Sequence bubbleShiftSequence = DOTween.Sequence();
+            Sequence bubbleShiftUpSequence = DOTween.Sequence();
             for (int x = 0; x < gridWidth; x++)
             {
                 for (int y = gridHeight - 1; y >= 0; y--)
@@ -140,15 +159,37 @@ public class BubbleGrid : MonoBehaviour
                         }
                         else
                         {
-                            SetBubbleAtGridIndeces(bubble, x, y + 2);
+                            SetBubbleGridIndeces(bubble, x, y + 2);
                             Vector3 newBubblePosition = IndecesToPosition(x, y + 2);
-                            Tween shiftUpTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftUpDuration).SetEase(animationCfg.bubbleShiftUpEase);
-                            bubbleShiftSequence.Insert(0, shiftUpTween);
+                            Tween shiftUpTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+                            bubbleShiftUpSequence.Insert(0, shiftUpTween);
                         }
                     }
                 }
             }
         }
+
+        //Try shift down
+        //TODO: The more free lines, the bigger the chance of shift. All screen lines free = 100% chance
+        if (bottomFreeLinesCount >= shiftDownFreeLinesRequired)
+        {
+            Sequence shiftDownSequence = DOTween.Sequence();
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = bottomFreeLinesCount - 1; y < gridHeight; y++)
+                {
+                    Bubble bubble = grid[x, y];
+                    if (bubble != null)
+                    {
+                        SetBubbleGridIndeces(bubble, x, y - 2);
+                        Vector3 newBubblePosition = IndecesToPosition(x, y - 2);
+                        Tween shiftDownTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+                        shiftDownSequence.Insert(0, shiftDownTween);
+                    }
+                }
+            }
+        }
+
 
         //Add top bubbles, if needed
         for (int x = 0; x < gridWidth; x++)
@@ -159,13 +200,13 @@ public class BubbleGrid : MonoBehaviour
                 {
                     Bubble newBubble = CreateNewBubble(true);
                     newBubble.transform.position = IndecesToPosition(x, y);
-                    SetBubbleAtGridIndeces(newBubble, x, y);
+                    SetBubbleGridIndeces(newBubble, x, y);
                 }
             }
         }
     }
 
-    private void SetBubbleAtGridIndeces(Bubble bubble, int x, int y)
+    private void SetBubbleGridIndeces(Bubble bubble, int x, int y)
     {
         if (grid[x, y] != null)
         {
@@ -298,13 +339,13 @@ public class BubbleGrid : MonoBehaviour
     {
         for (int x = 0; x < gridWidth; x++)
         {
-            for (int y = 1; y < gridHeight; y++)
+            for (int y = 3; y < gridHeight; y++)
             {
                 if (PointOnHexGrid(x,y))
                 {
                     Bubble newBubble = CreateNewBubble(true);
                     newBubble.transform.position = IndecesToPosition(x, y);
-                    SetBubbleAtGridIndeces(newBubble, x, y);
+                    SetBubbleGridIndeces(newBubble, x, y);
                 }
             }
         }
