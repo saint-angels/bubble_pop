@@ -14,8 +14,10 @@ public class BubbleGun : MonoBehaviour
     private Vector2Int? targetSlot = null;
     private BubbleGrid grid;
     private AnimationCfg animationCfg;
-
     private BubblesConfig bubblesConfig;
+
+    private float aimingRestrictedFraction = .2f;
+
     public void Init(BubbleGrid grid, BubblesConfig bubblesConfig, AnimationCfg animationCfg)
     {
         this.grid = grid;
@@ -40,9 +42,10 @@ public class BubbleGun : MonoBehaviour
 
     void Update()
     {
-        bool press = Input.GetMouseButton(0);
-        trajectoryLine.gameObject.SetActive(press);
-        if (press && currentGunBubble != null)
+        bool aiming = Input.mousePosition.y / Screen.height > aimingRestrictedFraction;
+        bool pressing = Input.GetMouseButton(0);
+        trajectoryLine.gameObject.SetActive(pressing && aiming);
+        if (pressing && currentGunBubble != null && aiming)
         {
             trajectoryPositionsCurrent.Clear();
             trajectoryPositionsCurrent.Add(bubbleGunPoint.position);
@@ -100,6 +103,11 @@ public class BubbleGun : MonoBehaviour
             trajectoryLine.positionCount = trajectoryPositionsCurrent.Count;
             trajectoryLine.SetPositions(trajectoryPositionsCurrent.ToArray());
 
+        }
+        else if(pressing && aiming == false)
+        {
+            targetSlot = null;
+            grid.SetBubbleOutlineActive(false);
         }
         else
         {
