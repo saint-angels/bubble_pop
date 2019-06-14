@@ -57,7 +57,12 @@ public class BubbleGrid : MonoBehaviour
         if (bubblesMatchedSet.Count > 1)
         {
             List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
-            bubblesMatched = bubblesMatched.OrderByDescending((b) => b.transform.position.y).ToList();
+            BubbleType afterMergeType = bubblesConfig.GetUpgradedType(bubblesMatched[0].Type, bubblesMatched.Count - 1);
+            bubblesMatched = bubblesMatched
+                                .OrderByDescending((b) => DoesBubbleHaveNeighbourOfType(b, afterMergeType))
+                                .ThenByDescending(b => b.transform.position.y)
+                                .ToList();
+
 
             Bubble targetMergeBubble = bubblesMatched[0];
 
@@ -73,16 +78,31 @@ public class BubbleGrid : MonoBehaviour
             }
             mergeSequence.OnComplete(() =>
             {
-                BubbleType newType = bubblesConfig.GetUpgradedType(targetMergeBubble.Type, bubblesMatched.Count - 1);
-                targetMergeBubble.Upgrade(newType);
+                targetMergeBubble.Upgrade(afterMergeType);
 
-                FinishTurn();
+                AttachBubble(targetMergeBubble, targetMergeBubble.Indeces.x, targetMergeBubble.Indeces.y);
             });
         }
         else
         {
             FinishTurn();
         }
+    }
+
+    private bool DoesBubbleHaveNeighbourOfType(Bubble bubble, BubbleType type)
+    {
+        foreach (var neighbourIndeces in bubble.GetNeighbourSlotIndeces())
+        {
+            if (PointOnHexGrid(neighbourIndeces.x, neighbourIndeces.y))
+            {
+                Bubble neighbourBubble = grid[neighbourIndeces.x, neighbourIndeces.y];
+                if (bubble != null && bubble.Type == type)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     //TODO: Return promise?
@@ -208,7 +228,7 @@ public class BubbleGrid : MonoBehaviour
 
     private void SetBubbleGridIndeces(Bubble bubble, int x, int y)
     {
-        if (grid[x, y] != null)
+        if (grid[x, y] != null && bubble.Indeces.x != x && bubble.Indeces.y != y)
         {
             Debug.LogWarning($"Overwriting bubble at grid {x}:{y} with bubble at {bubble.Indeces.x}:{bubble.Indeces.y}");
         }
