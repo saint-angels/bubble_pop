@@ -30,7 +30,7 @@ public class Bubble : MonoBehaviour
     public event Action<Bubble> OnUpgrade = (bubble) => { };
     public event Action<Bubble> OnDeath = (bubble) => { };
 
-    public BubbleType Type { get; private set; }
+    public uint Number { get; private set; }
     public Vector2Int Indeces { get; set; }
 
     [SerializeField] private new Collider2D collider;
@@ -50,18 +50,18 @@ public class Bubble : MonoBehaviour
 
     };
 
-    public void Init(BubbleType bubbleType, AnimationCfg animationCfg, bool interactible)
+    public void Init(uint bubbleNumber, bool interactible)
     {
-        this.animationCfg = animationCfg;
-        Type = bubbleType;
-        renderer.color = Type.color;
+        this.animationCfg = Root.Instance.ConfigManager.Animation;
+        Number = bubbleNumber;
+        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number);
         SetInteractible(interactible);
     }
 
-    public void Upgrade(BubbleType newBubbleType)
+    public void Upgrade(uint newNumber)
     {
-        Type = newBubbleType;
-        renderer.color = Type.color;
+        Number = newNumber;
+        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number);
         OnUpgrade(this);
     }
 

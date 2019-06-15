@@ -7,7 +7,7 @@ using System;
 
 public class BubbleGrid : MonoBehaviour
 {
-    public event Action<BubbleType> OnBubblesMerged = (afterMergeType) => { };
+    public event Action<uint> OnBubblesMerged = (afterMergeNumber) => { };
 
 
     //Move to settings?
@@ -66,9 +66,9 @@ public class BubbleGrid : MonoBehaviour
         if (bubblesMatchedSet.Count > 1)
         {
             List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
-            BubbleType afterMergeType = bubblesConfig.GetUpgradedType(bubblesMatched[0].Type, bubblesMatched.Count - 1);
+            uint afterMergeNumber = bubblesConfig.GetUpgradedType(bubblesMatched[0].Number, bubblesMatched.Count - 1);
             bubblesMatched = bubblesMatched
-                                .OrderByDescending((b) => DoesBubbleHaveNeighbourOfType(b, afterMergeType))
+                                .OrderByDescending((b) => DoesBubbleHaveNeighbourWithNumber(b, afterMergeNumber))
                                 .ThenByDescending(b => b.transform.position.y)
                                 .ToList();
 
@@ -87,8 +87,8 @@ public class BubbleGrid : MonoBehaviour
             }
             mergeSequence.OnComplete(() =>
             {
-                OnBubblesMerged(afterMergeType);
-                targetMergeBubble.Upgrade(afterMergeType);
+                OnBubblesMerged(afterMergeNumber);
+                targetMergeBubble.Upgrade(afterMergeNumber);
 
                 AttachBubble(targetMergeBubble, targetMergeBubble.Indeces.x, targetMergeBubble.Indeces.y);
             });
@@ -99,14 +99,14 @@ public class BubbleGrid : MonoBehaviour
         }
     }
 
-    private bool DoesBubbleHaveNeighbourOfType(Bubble bubble, BubbleType type)
+    private bool DoesBubbleHaveNeighbourWithNumber(Bubble bubble, uint number)
     {
         foreach (var neighbourIndeces in bubble.GetNeighbourSlotIndeces())
         {
             if (PointOnHexGrid(neighbourIndeces.x, neighbourIndeces.y))
             {
                 Bubble neighbourBubble = grid[neighbourIndeces.x, neighbourIndeces.y];
-                if (bubble != null && bubble.Type == type)
+                if (bubble != null && bubble.Number == number)
                 {
                     return true;
                 }
@@ -167,7 +167,7 @@ public class BubbleGrid : MonoBehaviour
                 bottomFreeLinesCount++;
             }
         }
-        Debug.Log($"Bottom free lines number:{bottomFreeLinesCount}");
+        //Debug.Log($"Bottom free lines number:{bottomFreeLinesCount}");
             
 
 
@@ -316,14 +316,34 @@ public class BubbleGrid : MonoBehaviour
 
     public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false)
     {
-        BubbleType type = bubblesConfig.GetTypeForSpawn();
+        uint minBubbleNumber = uint.MaxValue;
+        IterateOverGrid((x, y, bubble) =>
+        {
+            if (bubble != null && bubble.Number < minBubbleNumber)
+            {
+                minBubbleNumber = bubble.Number;
+            }
+        });
+
+        uint bubbleNumber = bubblesConfig.GetNumberToSpawn(Root.Instance.GameController.Score, minBubbleNumber);
         Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
         newBubble.Indeces = Vector2Int.zero;
         float size = altBubbleSize ? AltBubbleSize : bubbleSize;
         newBubble.transform.localScale = Vector3.one * size;
-        newBubble.Init(type, animationCfg, interactive);
+        newBubble.Init(bubbleNumber, interactive);
         Root.Instance.UI.AddHudToBubble(newBubble);
         return newBubble;
+    }
+
+    private void IterateOverGrid(Action<int,int, Bubble> action)
+    {
+        for (int x = 0; x < gridWidth; x++)
+        {
+            for (int y = 0; y < gridHeight; y++)
+            {
+                action(x, y, grid[x,y]);
+            }
+        }
     }
 
     private List<Bubble> NeighbourBubbles(Bubble originBubble)
@@ -351,7 +371,7 @@ public class BubbleGrid : MonoBehaviour
         foreach (var neighbourBubble in neighbours)
         {
 
-            if (neighbourBubble.Type == originBubble.Type && bubblesMatchedSet.Contains(neighbourBubble) == false)
+            if (neighbourBubble.Number == originBubble.Number && bubblesMatchedSet.Contains(neighbourBubble) == false)
             {
                 bubblesMatchedSet.Add(originBubble);
                 bubblesMatchedSet.Add(neighbourBubble);

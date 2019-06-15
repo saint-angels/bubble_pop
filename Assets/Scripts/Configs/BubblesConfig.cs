@@ -5,18 +5,28 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "BubblesConfig", menuName = "Configs/BubblesConfig")]
 public class BubblesConfig : ScriptableObject
 {
-    //Add Probabilities here?
-    public BubbleType[] types = null;
+    public Color[] bubbleColors = null;
+    public int rangeOfPowers = 4;
 
-    public BubbleType GetTypeForSpawn()
+    public Color ColorForNumber(uint number)
     {
-        return types[Random.Range(0, 4)]; ;
+        int powerOfTwo = (int)Mathf.Log(number, 2);
+        int colorIndex = powerOfTwo % bubbleColors.Length;
+        return bubbleColors[colorIndex];
     }
 
-    public BubbleType GetUpgradedType(BubbleType bubbleType, int upgradeLevel)
+    public uint GetNumberToSpawn(uint currentScore, uint minBubbleNumber)
     {
-        int indexOfType = System.Array.IndexOf(types, bubbleType);
-        int upgradedTypeIndex = Mathf.Min(indexOfType + upgradeLevel, types.Length - 1);
-        return types[upgradedTypeIndex];
+        int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
+        int bubblesSuggestedPower = (int)Mathf.Log(minBubbleNumber, 2);
+
+        int minPossiblePower = Mathf.Min(scoreSuggestedPower, bubblesSuggestedPower) + 1;
+        return (uint)Mathf.Pow(2, Random.Range(minPossiblePower, minPossiblePower + rangeOfPowers));
+    }
+
+    public uint GetUpgradedType(uint bubbleNumber, int upgradeLevel)
+    {
+        int powerOfTwoOriginal = (int)System.Math.Log(bubbleNumber, 2);
+        return (uint)Mathf.Pow(2, powerOfTwoOriginal + upgradeLevel);
     }
 }

@@ -7,6 +7,8 @@ public class GameController : MonoBehaviour
 {
     public event Action<uint> OnScoreUpdated = (newScore) => { };
 
+    public uint Score => score;
+
     [Header("Configs")]
     [SerializeField] private AnimationCfg animationCfg;
     [SerializeField] private BubblesConfig bubblesConfig;
@@ -21,9 +23,9 @@ public class GameController : MonoBehaviour
         Root.Instance.Gun.Init();
     }
 
-    private void OnBubblesMerged(BubbleType bubbleType)
+    private void OnBubblesMerged(uint bubbleNumber)
     {
-        score += bubbleType.number;
+        score += bubbleNumber;
         OnScoreUpdated(score);
     }
 }

@@ -17,7 +17,7 @@ public class UIManager : MonoBehaviour
         Vector3 bubbleCanvasPosition = RectTransformUtility.WorldToScreenPoint(Camera.main, bubble.transform.position);
 
         BubbleHud newHud = ObjectPool.Spawn(bubbleHudPrefab, Vector3.zero, Quaternion.identity, bubbleHudsContainer);
-        newHud.Init(bubble.Type);
+        newHud.Init(bubble.Number);
         newHud.SetPosition(bubbleCanvasPosition);
 
         bubbleHuds.Add(bubble, newHud);
@@ -31,7 +31,7 @@ public class UIManager : MonoBehaviour
 
     private void Bubble_OnUpgrade(Bubble bubble)
     {
-        bubbleHuds[bubble].Init(bubble.Type);
+        bubbleHuds[bubble].Init(bubble.Number);
     }
 
     private void Bubble_OnDeath(Bubble bubble)
@@ -51,7 +51,7 @@ public class UIManager : MonoBehaviour
 
     private void OnScoreUpdated(uint newScore)
     {
-        scoreLabel.text = NumberFormatHelper.FormatNumberScore(newScore * newScore);
+        scoreLabel.text = NumberFormatHelper.FormatNumberScore(newScore);
     }
 
     private void Start()
