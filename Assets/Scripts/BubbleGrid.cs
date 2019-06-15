@@ -6,6 +6,11 @@ using DG.Tweening;
 
 public class BubbleGrid : MonoBehaviour
 {
+    //Move to settings?
+    public float BubbleSize => bubbleSize;
+    public float AltBubbleSize => BubbleSize / 1.5f;
+
+
     [SerializeField] private Bubble bubblePrefab;
     [SerializeField] private Transform gridOriginPoint;
     [SerializeField] private GameObject bubbleOutline;
@@ -304,12 +309,13 @@ public class BubbleGrid : MonoBehaviour
         return new Vector3(positionX, positionY, 0);
     }
 
-    public Bubble CreateNewBubble(bool interactive)
+    public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false)
     {
         BubbleType type = bubblesConfig.GetTypeForSpawn();
         Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
         newBubble.Indeces = Vector2Int.zero;
-        newBubble.transform.localScale = new Vector3(bubbleSize, bubbleSize, 1f);
+        float size = altBubbleSize ? AltBubbleSize : bubbleSize;
+        newBubble.transform.localScale = Vector3.one * size;
         newBubble.Init(type, animationCfg, interactive);
         Root.Instance.UI.AddHudToBubble(newBubble);
         return newBubble;

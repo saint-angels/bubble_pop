@@ -5,65 +5,131 @@ using UnityEngine;
 
 public class BubbleGun : MonoBehaviour
 {
-    [SerializeField] private Transform bubbleGunPoint = null;
+    private Vector3 AltBubblePoint => muzzlePoint.position + altBubbleOffset;
+
+    [SerializeField] private Transform muzzlePoint = null;
     [SerializeField] private Bubble bubblePrefab = null;
     [SerializeField] private LineRenderer trajectoryLine = null;
 
-    private Bubble currentGunBubble;
+    private Bubble currentBubble = null;
+    private Bubble alternativeBubble = null;
+
     private List<Vector3> trajectoryPositionsCurrent = new List<Vector3>();
     private Vector2Int? targetSlot = null;
     private BubbleGrid grid;
     private AnimationCfg animationCfg;
     private BubblesConfig bubblesConfig;
+    private Vector3 altBubbleOffset;
+    float distanceFromCamera;
 
-    private float aimingRestrictedFraction = .2f;
+    //Layers
+    private int layerWalls;
+    private int layerBubbles;
+
+    private const float aimingRestrictedScreenFraction = .2f;
 
     public void Init(BubbleGrid grid, BubblesConfig bubblesConfig, AnimationCfg animationCfg)
     {
         this.grid = grid;
         this.bubblesConfig = bubblesConfig;
         this.animationCfg = animationCfg;
-        LoadGun();
+
+        altBubbleOffset = Vector3.left * grid.BubbleSize * 1.25f;
+        distanceFromCamera = Vector3.Distance(muzzlePoint.position, Camera.main.transform.position);
+
+        layerWalls = LayerMask.NameToLayer("Walls");
+        layerBubbles = LayerMask.NameToLayer("Bubbles");
+
+
+    LoadGun();
     }
 
+    //Shouldn't take control away from the player 
+    //TODO: Add spawn animation & animation interruptions
     private void LoadGun()
     {
-        if (currentGunBubble == null)
+        if (currentBubble == null)
         {
-            Bubble newBubble = grid.CreateNewBubble(false);
-            newBubble.transform.position = bubbleGunPoint.position;
-            currentGunBubble = newBubble;
+            if (alternativeBubble == null)
+            {
+                Bubble newBubble = grid.CreateNewBubble(false);
+                currentBubble = newBubble;
+                currentBubble.transform.position = muzzlePoint.position;
+            }
+            else
+            {
+                currentBubble = alternativeBubble;
+                alternativeBubble = null;
+
+                MoveBubbleFromAltPositionToCurrent();
+            }
+
+            Bubble newAltBubble = grid.CreateNewBubble(true, true);
+            newAltBubble.transform.position = AltBubblePoint;
+            alternativeBubble = newAltBubble;
         }
         else
         {
-            Debug.LogError("Gun bubble already set!");
+            Debug.LogError("Gun bubble already loaded!");
         }
+    }
+
+    private void MoveBubbleFromAltPositionToCurrent()
+    {
+        currentBubble.transform.DOMove(muzzlePoint.position, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+        currentBubble.transform.DOScale(grid.BubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+        currentBubble.SetInteractible(false);
     }
 
     void Update()
     {
-        bool aiming = Input.mousePosition.y / Screen.height > aimingRestrictedFraction;
+        bool aiming = Input.mousePosition.y / Screen.height > aimingRestrictedScreenFraction;
+        Vector3 mousePosition = Input.mousePosition;
+
+
+        if (aiming == false && Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+            RaycastHit2D vHit = Physics2D.Raycast(ray.origin, ray.direction);
+            bool alternativeBubbleClicked = vHit.collider != null && vHit.collider.gameObject.layer == layerBubbles;
+            if (alternativeBubbleClicked)
+            {
+                Bubble bufferBubble = alternativeBubble;
+                alternativeBubble = currentBubble;
+                currentBubble = bufferBubble;
+
+                MoveBubbleFromAltPositionToCurrent();
+
+
+                alternativeBubble.transform.DOMove(AltBubblePoint, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+                alternativeBubble.transform
+                    .DOScale(grid.AltBubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase)
+                    .OnComplete(() => alternativeBubble.SetInteractible(true));
+
+            }
+        }
+
+
+        //Process the aiming of a ball
         bool pressing = Input.GetMouseButton(0);
         trajectoryLine.gameObject.SetActive(pressing && aiming);
-        if (pressing && currentGunBubble != null && aiming)
+        if (pressing && currentBubble != null && aiming)
         {
             trajectoryPositionsCurrent.Clear();
-            trajectoryPositionsCurrent.Add(bubbleGunPoint.position);
+            trajectoryPositionsCurrent.Add(muzzlePoint.position);
 
-            Vector3 mousePosition = Input.mousePosition;
-
-            float distanceFromCamera = Vector3.Distance(bubbleGunPoint.position, Camera.main.transform.position);
+            
             Vector3 mouseWorldPosition = Camera.main.ViewportToWorldPoint(new Vector3(mousePosition.x / Screen.width, mousePosition.y / Screen.height, distanceFromCamera));
 
-            Vector2 castDirection = (mouseWorldPosition - bubbleGunPoint.position).normalized;
+            Vector2 castDirection = (mouseWorldPosition - muzzlePoint.position).normalized;
 
-            RaycastHit2D hit = Hit(bubbleGunPoint.position, castDirection, true);
+            RaycastHit2D hit = Hit(muzzlePoint.position, castDirection, true);
             if (hit.collider != null)
             {
                 trajectoryPositionsCurrent.Add(hit.point);
 
                 int hitDirectObjectLayer = hit.collider.gameObject.layer;
-                if (hitDirectObjectLayer == LayerMask.NameToLayer("Walls"))
+                if (hitDirectObjectLayer == layerWalls)
                 {
                     Vector3 reflectedDirection = Vector3.Reflect(castDirection, Vector3.right);
                     RaycastHit2D bounceHit = Hit(hit.point, reflectedDirection, false);
@@ -71,7 +137,7 @@ public class BubbleGun : MonoBehaviour
                     {
                         int bounceHitObjectLayer = bounceHit.collider.gameObject.layer;
                         trajectoryPositionsCurrent.Add(bounceHit.point);
-                        if (bounceHitObjectLayer == LayerMask.NameToLayer("Bubbles"))
+                        if (bounceHitObjectLayer == layerBubbles)
                         {
                             HandleBubbleHit(bounceHit);
                         }
@@ -82,11 +148,13 @@ public class BubbleGun : MonoBehaviour
                     }
                     else
                     {
+                        //Didn't hit anything after bounce
                         grid.SetBubbleOutlineActive(false);
-                        trajectoryPositionsCurrent.Add(new Vector3(hit.point.x, hit.point.y, 0) + reflectedDirection);
+                        trajectoryPositionsCurrent.Clear();
+                        targetSlot = null;
                     }
                 }
-                else if (hitDirectObjectLayer == LayerMask.NameToLayer("Bubbles"))
+                else if (hitDirectObjectLayer == layerBubbles)
                 {
                     HandleBubbleHit(hit);
                 }
@@ -118,8 +186,9 @@ public class BubbleGun : MonoBehaviour
             if (canShoot)
             {
                 Vector3 slotPosition = grid.IndecesToPosition(targetSlot.Value.x, targetSlot.Value.y);
-                var moveTween = currentGunBubble.transform.DOMove(slotPosition, animationCfg.shootBubbleFlyDuration);
-                Bubble flyingBubble = currentGunBubble;
+                currentBubble.transform.DOKill(true);
+                var moveTween = currentBubble.transform.DOMove(slotPosition, animationCfg.shootBubbleFlyDuration);
+                Bubble flyingBubble = currentBubble;
                 Vector2Int gunTargetSlot = targetSlot.Value;
                 moveTween.OnComplete(() => 
                 {
@@ -128,7 +197,7 @@ public class BubbleGun : MonoBehaviour
                 });
 
                 targetSlot = null;
-                currentGunBubble = null;
+                currentBubble = null;
             }
         }
     }
@@ -153,10 +222,10 @@ public class BubbleGun : MonoBehaviour
 
     private RaycastHit2D Hit(Vector3 start, Vector3 direction, bool withWalls)
     {
-        LayerMask mask = 1 << LayerMask.NameToLayer("Bubbles");
+        LayerMask mask = 1 << layerBubbles;
         if (withWalls)
         {
-            mask |= 1 << LayerMask.NameToLayer("Walls");
+            mask |= 1 << layerWalls;
         }
         return Physics2D.Raycast(start, direction, 10f, mask);
     }

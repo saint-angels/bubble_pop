@@ -865,7 +865,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6913e1955b6b46f4ab20940f3cae9521, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bubbleGunPoint: {fileID: 1479353904}
+  muzzlePoint: {fileID: 1479353904}
+  alternativeBubblePoint: {fileID: 0}
   bubblePrefab: {fileID: 3281032778686570695, guid: 83497a4b0fb25a543a9b01db55432923,
     type: 3}
   trajectoryLine: {fileID: 2025879549}
@@ -1013,7 +1014,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1479353904}
   m_Layer: 0
-  m_Name: GunPosition
+  m_Name: MuzzlePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
