@@ -9,7 +9,7 @@ public class BubbleHud : MonoBehaviour
 
     public void Init(BubbleType bubbleType)
     {
-        numberLabel.text = bubbleType.GetHudString();
+        numberLabel.text = NumberFormatHelper.FormatNumberBubble(bubbleType.number);
     }
 
     public void SetPosition(Vector2 newPosition)

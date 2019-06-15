@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using DG.Tweening;
+using System;
 
 public class BubbleGrid : MonoBehaviour
 {
+    public event Action<BubbleType> OnBubblesMerged = (afterMergeType) => { };
+
+
     //Move to settings?
     public float BubbleSize => bubbleSize;
     public float AltBubbleSize => BubbleSize / 1.5f;
@@ -36,10 +40,10 @@ public class BubbleGrid : MonoBehaviour
     private HashSet<Bubble> bubblesMatchedSet = new HashSet<Bubble>();
     
 
-    public void Init(BubblesConfig bubblesConfig, AnimationCfg animationCfg)
+    public void Init()
     {
-        this.bubblesConfig = bubblesConfig;
-        this.animationCfg = animationCfg;
+        this.bubblesConfig = Root.Instance.ConfigManager.Bubbles;
+        this.animationCfg = Root.Instance.ConfigManager.Animation;
 
         bubbleOutline.transform.localScale = new Vector3(bubbleSize, bubbleSize, 1);
 
@@ -83,6 +87,7 @@ public class BubbleGrid : MonoBehaviour
             }
             mergeSequence.OnComplete(() =>
             {
+                OnBubblesMerged(afterMergeType);
                 targetMergeBubble.Upgrade(afterMergeType);
 
                 AttachBubble(targetMergeBubble, targetMergeBubble.Indeces.x, targetMergeBubble.Indeces.y);

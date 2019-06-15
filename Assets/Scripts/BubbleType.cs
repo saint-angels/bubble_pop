@@ -11,27 +11,6 @@ public struct BubbleType : System.IEquatable<BubbleType>
     [UnityEngine.Serialization.FormerlySerializedAs("bubbleNumber")]
     public uint number;
 
-    private static readonly SortedDictionary<int, string> abbrevations = new SortedDictionary<int, string>
-     {
-         {1000,"K"},
-         {1000000, "M" },
-         {1000000000, "B" }
-     };
-
-    public string GetHudString()
-    {
-        for (int i = abbrevations.Count - 1; i >= 0; i--)
-        {
-            KeyValuePair<int, string> pair = abbrevations.ElementAt(i);
-            if (Mathf.Abs(number) >= pair.Key)
-            {
-                int roundedNumber = Mathf.FloorToInt(number / pair.Key);
-                return roundedNumber.ToString() + pair.Value;
-            }
-        }
-        return number.ToString();
-    }
-
     public bool Equals(BubbleType other)
     {
         return number == other.number;

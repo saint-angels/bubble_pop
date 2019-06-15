@@ -28,11 +28,11 @@ public class BubbleGun : MonoBehaviour
 
     private const float aimingRestrictedScreenFraction = .2f;
 
-    public void Init(BubbleGrid grid, BubblesConfig bubblesConfig, AnimationCfg animationCfg)
+    public void Init()
     {
-        this.grid = grid;
-        this.bubblesConfig = bubblesConfig;
-        this.animationCfg = animationCfg;
+        this.grid = Root.Instance.Grid;
+        this.bubblesConfig = Root.Instance.ConfigManager.Bubbles;
+        this.animationCfg = Root.Instance.ConfigManager.Animation;
 
         altBubbleOffset = Vector3.left * grid.BubbleSize * 1.25f;
         distanceFromCamera = Vector3.Distance(muzzlePoint.position, Camera.main.transform.position);
