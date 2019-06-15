@@ -31,7 +31,9 @@ public class Bubble : MonoBehaviour
     public event Action<Bubble> OnDeath = (bubble) => { };
 
     public uint Number { get; private set; }
-    public Vector2Int Indeces { get; set; }
+
+    public int X { get; set; }
+    public int Y { get; set; }
 
     [SerializeField] private new Collider2D collider;
     [SerializeField] private SidePoint[] bubbleSidePoints;
@@ -49,6 +51,12 @@ public class Bubble : MonoBehaviour
         new Vector2Int(1,1),
 
     };
+
+    public void SetGridPosition(int x, int y)
+    {
+        this.X = x;
+        this.Y = y;
+    }
 
     public void Init(uint bubbleNumber, bool interactible)
     {
@@ -76,7 +84,7 @@ public class Bubble : MonoBehaviour
 
         for (int i = 0; i < neighbourOffsets.Length; i++)
         {
-            slots[i] = Indeces + neighbourOffsets[i];
+            slots[i] = new Vector2Int(X, Y) + neighbourOffsets[i];
         }
 
         return slots;

@@ -37,7 +37,7 @@ public class BubbleGrid : MonoBehaviour
 
     private AnimationCfg animationCfg;
 
-    private HashSet<Bubble> bubblesMatchedSet = new HashSet<Bubble>();
+    private HashSet<Bubble> bubblesActionSet = new HashSet<Bubble>();
     
 
     public void Init()
@@ -59,13 +59,13 @@ public class BubbleGrid : MonoBehaviour
         newBubble.SetInteractible(true);
 
         //TODO: If attach bubble gonna be called not only from gun(multiple matches of diff numbers in a row?), don't clean hashset here
-        bubblesMatchedSet.Clear();
+        bubblesActionSet.Clear();
 
-        CheckMatches(newBubble, x, y);
+        CheckMatches(newBubble);
 
-        if (bubblesMatchedSet.Count > 1)
+        if (bubblesActionSet.Count > 1)
         {
-            List<Bubble> bubblesMatched = new List<Bubble>(bubblesMatchedSet);
+            List<Bubble> bubblesMatched = new List<Bubble>(bubblesActionSet);
             uint afterMergeNumber = bubblesConfig.GetUpgradedType(bubblesMatched[0].Number, bubblesMatched.Count - 1);
             bubblesMatched = bubblesMatched
                                 .OrderByDescending((b) => DoesBubbleHaveNeighbourWithNumber(b, afterMergeNumber))
@@ -90,12 +90,45 @@ public class BubbleGrid : MonoBehaviour
                 OnBubblesMerged(afterMergeNumber);
                 targetMergeBubble.Upgrade(afterMergeNumber);
 
-                AttachBubble(targetMergeBubble, targetMergeBubble.Indeces.x, targetMergeBubble.Indeces.y);
+                if (targetMergeBubble.Number >= bubblesConfig.explosionThreshold)
+                {
+                    Explode(targetMergeBubble, bubblesConfig.explosionRange);
+                }
+                else
+                {
+                    AttachBubble(targetMergeBubble, targetMergeBubble.X, targetMergeBubble.Y);
+                }
+
             });
         }
         else
         {
             FinishTurn();
+        }
+    }
+
+    private int Distance(Bubble b1, Bubble b2)
+    {
+        int dx = Mathf.Abs(b1.X - b2.X);
+        int dy = Mathf.Abs(b1.Y - b2.Y);
+        return dy + Mathf.Max(0, (dx - dy) / 2);
+    }
+
+    private void Explode(Bubble originBubble, int maxDistance)
+    {
+        List<Bubble> bubblesToExplode = new List<Bubble>();
+
+        IterateOverGrid((x, y, bubble) =>
+        {
+            if (bubble != null && Distance(originBubble, bubble) <= maxDistance)
+            {
+                bubblesToExplode.Add(bubble);
+            }
+        });
+
+        for (int i = bubblesToExplode.Count - 1; i >= 0; i--)
+        {
+            DestroyBubble(bubblesToExplode[i], Bubble.BubbleDeathType.EXPLOSION);
         }
     }
 
@@ -200,7 +233,7 @@ public class BubbleGrid : MonoBehaviour
         }
 
         //Try shift down
-        //TODO: The more free lines, the bigger the chance of shift. All screen lines free = 100% chance
+        //TODO: The more free lines, the bigger the chance of shift. All screen lines free = 100% chance?
         if (bottomFreeLinesCount >= shiftDownFreeLinesRequired)
         {
             Sequence shiftDownSequence = DOTween.Sequence();
@@ -238,20 +271,20 @@ public class BubbleGrid : MonoBehaviour
 
     private void SetBubbleGridIndeces(Bubble bubble, int x, int y)
     {
-        if (grid[x, y] != null && bubble.Indeces.x != x && bubble.Indeces.y != y)
+        if (grid[x, y] != null && bubble.X != x && bubble.Y != y)
         {
-            Debug.LogWarning($"Overwriting bubble at grid {x}:{y} with bubble at {bubble.Indeces.x}:{bubble.Indeces.y}");
+            Debug.LogWarning($"Overwriting bubble at grid {x}:{y} with bubble at {bubble.X}:{bubble.Y}");
         }
 
-        if (bubble.Indeces != Vector2Int.zero && grid[bubble.Indeces.x, bubble.Indeces.y] != bubble)
+        if (bubble.X != 0 && bubble.Y != 0 && grid[bubble.X, bubble.Y] != bubble)
         {
-            Debug.LogWarning($"Moving bubble from position {bubble.Indeces.x}:{bubble.Indeces.y} where bubble is not that? Eh?");
+            Debug.LogWarning($"Moving bubble from position {bubble.X}:{bubble.Y} where bubble is not that? Eh?");
         }
 
-        grid[bubble.Indeces.x, bubble.Indeces.y] = null;
+        grid[bubble.X, bubble.Y] = null;
 
         grid[x, y] = bubble;
-        bubble.Indeces = new Vector2Int(x, y);
+        bubble.SetGridPosition(x, y);
     }
 
     private void GravityBubbleBubble(Bubble bubble, List<Bubble> hangingBubbles)
@@ -269,7 +302,7 @@ public class BubbleGrid : MonoBehaviour
 
     private void DestroyBubble(Bubble bubble, Bubble.BubbleDeathType deathType)
     {
-        grid[bubble.Indeces.x, bubble.Indeces.y] = null;
+        grid[bubble.X, bubble.Y] = null;
         bubble.Die(deathType);
     }
 
@@ -327,7 +360,7 @@ public class BubbleGrid : MonoBehaviour
 
         uint bubbleNumber = bubblesConfig.GetNumberToSpawn(Root.Instance.GameController.Score, minBubbleNumber);
         Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
-        newBubble.Indeces = Vector2Int.zero;
+        newBubble.SetGridPosition(0, 0);
         float size = altBubbleSize ? AltBubbleSize : bubbleSize;
         newBubble.transform.localScale = Vector3.one * size;
         newBubble.Init(bubbleNumber, interactive);
@@ -364,18 +397,18 @@ public class BubbleGrid : MonoBehaviour
         return neighbours;
     }
 
-    private void CheckMatches(Bubble originBubble, int x, int y)
+    private void CheckMatches(Bubble originBubble)
     {
         List<Bubble> neighbours = NeighbourBubbles(originBubble);
 
         foreach (var neighbourBubble in neighbours)
         {
 
-            if (neighbourBubble.Number == originBubble.Number && bubblesMatchedSet.Contains(neighbourBubble) == false)
+            if (neighbourBubble.Number == originBubble.Number && bubblesActionSet.Contains(neighbourBubble) == false)
             {
-                bubblesMatchedSet.Add(originBubble);
-                bubblesMatchedSet.Add(neighbourBubble);
-                CheckMatches(neighbourBubble, neighbourBubble.Indeces.x, neighbourBubble.Indeces.y);
+                bubblesActionSet.Add(originBubble);
+                bubblesActionSet.Add(neighbourBubble);
+                CheckMatches(neighbourBubble);
             }
         }
     }

@@ -8,6 +8,10 @@ public class BubblesConfig : ScriptableObject
     public Color[] bubbleColors = null;
     public int rangeOfPowers = 4;
 
+
+    public int explosionRange = 3;
+    public uint explosionThreshold = 2048;
+
     public Color ColorForNumber(uint number)
     {
         int powerOfTwo = (int)Mathf.Log(number, 2);
