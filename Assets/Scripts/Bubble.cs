@@ -35,9 +35,12 @@ public class Bubble : MonoBehaviour
     public int X { get; set; }
     public int Y { get; set; }
 
-    [SerializeField] private new Collider2D collider;
-    [SerializeField] private SidePoint[] bubbleSidePoints;
-    [SerializeField] private new SpriteRenderer renderer;
+    [SerializeField] private new Collider2D collider = null;
+    [SerializeField] private SidePoint[] bubbleSidePoints = null;
+    [SerializeField] private new SpriteRenderer renderer = null;
+
+    [Header("VFX")]
+    [SerializeField] private ParticleEffectBase vfxExplosion = null;
 
     private AnimationCfg animationCfg;
 
@@ -93,10 +96,13 @@ public class Bubble : MonoBehaviour
     public void Die(BubbleDeathType deathType)
     {
         SetInteractible(false);
+        transform.DOKill();
 
         switch (deathType)
         {
             case BubbleDeathType.EXPLOSION:
+                ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
+                newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number));
                 Death();
                 break;
             case BubbleDeathType.FALL:

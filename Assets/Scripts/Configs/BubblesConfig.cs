@@ -6,7 +6,7 @@ using UnityEngine;
 public class BubblesConfig : ScriptableObject
 {
     public Color[] bubbleColors = null;
-    public int rangeOfPowers = 4;
+    public int rangeOfPowers = 3;
 
 
     public int explosionRange = 3;
@@ -19,13 +19,23 @@ public class BubblesConfig : ScriptableObject
         return bubbleColors[colorIndex];
     }
 
-    public uint GetNumberToSpawn(uint currentScore, uint minBubbleNumber)
+    public uint GetNumberToSpawn(uint currentScore, uint minBubbleNumber, uint randomBottomBubbleNumber)
     {
-        int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
-        int bubblesSuggestedPower = (int)Mathf.Log(minBubbleNumber, 2);
+        bool gridEmpty = randomBottomBubbleNumber == 0;
+        //if (gridEmpty)
+        {
+            //This version uses current score & min grid bubble number
+            int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
+            int bubblesSuggestedPower = (int)Mathf.Log(minBubbleNumber, 2);
 
-        int minPossiblePower = Mathf.Min(scoreSuggestedPower, bubblesSuggestedPower) + 1;
-        return (uint)Mathf.Pow(2, Random.Range(minPossiblePower, minPossiblePower + rangeOfPowers));
+            int minPossiblePower = Mathf.Min(scoreSuggestedPower, bubblesSuggestedPower) + 1;
+            return (uint)Mathf.Pow(2, Random.Range(minPossiblePower, minPossiblePower + rangeOfPowers));
+        }
+        //else
+        //{
+        //    //Stupid and predictable
+        //    return randomBottomBubbleNumber;
+        //}
     }
 
     public uint GetUpgradedType(uint bubbleNumber, int upgradeLevel)

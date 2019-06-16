@@ -28,7 +28,7 @@ public class BubbleGrid : MonoBehaviour
     private float sqMaxSlotSnapDistance;
 
     //Shift down settings
-    int shiftDownFreeLinesRequired = 3;
+    int freeLinesRequiredForShiftDown = 3;
 
 
     //Hex grid in "doubled" coordinates
@@ -50,6 +50,7 @@ public class BubbleGrid : MonoBehaviour
         this.sqMaxSlotSnapDistance = Mathf.Pow(bubbleSize, 2);
 
         SpawnMore();
+        //FinishTurn();
     }
 
     public void AttachBubble(Bubble newBubble, int x, int y)
@@ -107,6 +108,89 @@ public class BubbleGrid : MonoBehaviour
         }
     }
 
+    public void SetBubbleOutlineActive(bool isActive, Vector2Int? coordinates = null)
+    {
+        bubbleOutline.SetActive(isActive);
+        if (coordinates.HasValue)
+        {
+            bubbleOutline.transform.position = IndecesToPosition(coordinates.Value.x, coordinates.Value.y);
+        }
+    }
+
+    public Vector2Int? CanAttachBubbleTo(Bubble bubble, Vector3 contactPoint)
+    {
+        List<Vector2Int> attachSlotPositions = bubble.GetNeighbourSlotIndeces()
+                                                        .Where(attachPoint => PointOnHexGrid(attachPoint.x, attachPoint.y) && grid[attachPoint.x, attachPoint.y] == null)
+                                                        .OrderBy(attachPoint => Vector3.SqrMagnitude(IndecesToPosition(attachPoint.x, attachPoint.y) - contactPoint))
+                                                        .ToList();
+
+        if (attachSlotPositions.Count > 0)
+        {
+            Vector2Int bestSlotPoint = attachSlotPositions[0];
+            float sqDistanceToSlot = Vector3.SqrMagnitude(IndecesToPosition(bestSlotPoint.x, bestSlotPoint.y) - contactPoint);
+            if (sqDistanceToSlot < sqMaxSlotSnapDistance)
+            {
+                SetBubbleOutlineActive(true, bestSlotPoint);
+                return bestSlotPoint;
+            }
+        }
+
+        //Out of grid, or all slots filled, or best slot is too far away
+        return null;
+    }
+
+    public Vector3 IndecesToPosition(int x, int y)
+    {
+        float positionX = hexSize * Mathf.Sqrt(3f)/2f * x;
+        float positionY = hexSize * 3f/2f * y;
+
+        positionX += gridOriginPoint.position.x;
+        positionY += gridOriginPoint.position.y;
+        return new Vector3(positionX, positionY, 0);
+    }
+
+    public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false)
+    {
+        uint minBubbleNumber = uint.MaxValue;
+        IterateOverGrid((x, y, bubble) =>
+        {
+            if (bubble != null && bubble.Number < minBubbleNumber)
+            {
+                minBubbleNumber = bubble.Number;
+            }
+        });
+
+
+        List<uint> bottomTwoRowsBubbles = new List<uint>();
+        for (int x = 0; x < gridWidth; x++)
+        {
+            int columnBubblesReviewed = 0;
+            for (int y = 0; y < gridHeight && columnBubblesReviewed < 2; y++)
+            {
+                if (PointOnHexGrid(x, y))
+                {
+                    if (grid[x, y] != null)
+                    {
+                        bottomTwoRowsBubbles.Add(grid[x, y].Number);
+                        columnBubblesReviewed++;
+                    }
+                }
+            }
+        }
+
+        int randomBottomBubbleIndex = UnityEngine.Random.Range(0, bottomTwoRowsBubbles.Count);
+        uint randomBottomBubbleNumber = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
+
+        uint bubbleNumber = bubblesConfig.GetNumberToSpawn(Root.Instance.GameController.Score, minBubbleNumber, randomBottomBubbleNumber);
+        Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
+        newBubble.SetGridPosition(0, 0);
+        float size = altBubbleSize ? AltBubbleSize : bubbleSize;
+        newBubble.transform.localScale = Vector3.one * size;
+        newBubble.Init(bubbleNumber, interactive);
+        Root.Instance.UI.AddHudToBubble(newBubble);
+        return newBubble;
+    }
+
     private int Distance(Bubble b1, Bubble b2)
     {
         int dx = Mathf.Abs(b1.X - b2.X);
@@ -120,6 +204,7 @@ public class BubbleGrid : MonoBehaviour
 
         IterateOverGrid((x, y, bubble) =>
         {
+            //Can optimize that
             if (bubble != null && Distance(originBubble, bubble) <= maxDistance)
             {
                 bubblesToExplode.Add(bubble);
@@ -201,10 +286,10 @@ public class BubbleGrid : MonoBehaviour
             }
         }
         //Debug.Log($"Bottom free lines number:{bottomFreeLinesCount}");
-            
 
 
-        //Shift up, if player used whole height of the grid
+
+        //Shift up, if whole height of the grid is used
         if (bottomFreeLinesCount == 0)
         {
             Sequence bubbleShiftUpSequence = DOTween.Sequence();
@@ -224,6 +309,7 @@ public class BubbleGrid : MonoBehaviour
                         {
                             SetBubbleGridIndeces(bubble, x, y + 2);
                             Vector3 newBubblePosition = IndecesToPosition(x, y + 2);
+                            bubble.transform.DOKill();
                             Tween shiftUpTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
                             bubbleShiftUpSequence.Insert(0, shiftUpTween);
                         }
@@ -234,7 +320,7 @@ public class BubbleGrid : MonoBehaviour
 
         //Try shift down
         //TODO: The more free lines, the bigger the chance of shift. All screen lines free = 100% chance?
-        if (bottomFreeLinesCount >= shiftDownFreeLinesRequired)
+        if (bottomFreeLinesCount >= freeLinesRequiredForShiftDown)
         {
             Sequence shiftDownSequence = DOTween.Sequence();
             for (int x = 0; x < gridWidth; x++)
@@ -244,6 +330,7 @@ public class BubbleGrid : MonoBehaviour
                     Bubble bubble = grid[x, y];
                     if (bubble != null)
                     {
+                        bubble.transform.DOKill();
                         SetBubbleGridIndeces(bubble, x, y - 2);
                         Vector3 newBubblePosition = IndecesToPosition(x, y - 2);
                         Tween shiftDownTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
@@ -304,68 +391,6 @@ public class BubbleGrid : MonoBehaviour
     {
         grid[bubble.X, bubble.Y] = null;
         bubble.Die(deathType);
-    }
-
-    public void SetBubbleOutlineActive(bool isActive, Vector2Int? coordinates = null)
-    {
-        bubbleOutline.SetActive(isActive);
-        if (coordinates.HasValue)
-        {
-            bubbleOutline.transform.position = IndecesToPosition(coordinates.Value.x, coordinates.Value.y);
-        }
-    }
-
-    public Vector2Int? CanAttachBubbleTo(Bubble bubble, Vector3 contactPoint)
-    {
-        List<Vector2Int> attachSlotPositions = bubble.GetNeighbourSlotIndeces()
-                                                        .Where(attachPoint => PointOnHexGrid(attachPoint.x, attachPoint.y) && grid[attachPoint.x, attachPoint.y] == null)
-                                                        .OrderBy(attachPoint => Vector3.SqrMagnitude(IndecesToPosition(attachPoint.x, attachPoint.y) - contactPoint))
-                                                        .ToList();
-
-        if (attachSlotPositions.Count > 0)
-        {
-            Vector2Int bestSlotPoint = attachSlotPositions[0];
-            float sqDistanceToSlot = Vector3.SqrMagnitude(IndecesToPosition(bestSlotPoint.x, bestSlotPoint.y) - contactPoint);
-            if (sqDistanceToSlot < sqMaxSlotSnapDistance)
-            {
-                SetBubbleOutlineActive(true, bestSlotPoint);
-                return bestSlotPoint;
-            }
-        }
-
-        //Out of grid, or all slots filled, or best slot is too far away
-        return null;
-    }
-
-    public Vector3 IndecesToPosition(int x, int y)
-    {
-        float positionX = hexSize * Mathf.Sqrt(3f)/2f * x;
-        float positionY = hexSize * 3f/2f * y;
-
-        positionX += gridOriginPoint.position.x;
-        positionY += gridOriginPoint.position.y;
-        return new Vector3(positionX, positionY, 0);
-    }
-
-    public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false)
-    {
-        uint minBubbleNumber = uint.MaxValue;
-        IterateOverGrid((x, y, bubble) =>
-        {
-            if (bubble != null && bubble.Number < minBubbleNumber)
-            {
-                minBubbleNumber = bubble.Number;
-            }
-        });
-
-        uint bubbleNumber = bubblesConfig.GetNumberToSpawn(Root.Instance.GameController.Score, minBubbleNumber);
-        Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
-        newBubble.SetGridPosition(0, 0);
-        float size = altBubbleSize ? AltBubbleSize : bubbleSize;
-        newBubble.transform.localScale = Vector3.one * size;
-        newBubble.Init(bubbleNumber, interactive);
-        Root.Instance.UI.AddHudToBubble(newBubble);
-        return newBubble;
     }
 
     private void IterateOverGrid(Action<int,int, Bubble> action)
@@ -433,8 +458,5 @@ public class BubbleGrid : MonoBehaviour
                 }
             }
         }
-
-        //TODO: Spawn only bubbles that can hang
-        //GravityCheck();
     }
 }

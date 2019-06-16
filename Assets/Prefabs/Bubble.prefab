@@ -117,6 +117,8 @@ MonoBehaviour:
   - sideType: 2
     point: {fileID: 4055934098514394161}
   renderer: {fileID: 494703520056575545}
+  vfxExplosion: {fileID: -6598232656869866119, guid: 8fa1652872302fa48a438166796e495e,
+    type: 3}
 --- !u!58 &6724667996857311628
 CircleCollider2D:
   m_ObjectHideFlags: 0
