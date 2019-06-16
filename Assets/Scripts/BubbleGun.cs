@@ -8,7 +8,6 @@ public class BubbleGun : MonoBehaviour
     private Vector3 AltBubblePoint => muzzlePoint.position + altBubbleOffset;
 
     [SerializeField] private Transform muzzlePoint = null;
-    [SerializeField] private Bubble bubblePrefab = null;
     [SerializeField] private LineRenderer trajectoryLine = null;
 
     private Bubble currentBubble = null;

@@ -75,8 +75,14 @@ public class UIManager : MonoBehaviour
         {
             Bubble bubble = bubbleHudPair.Key;
             BubbleHud hud = bubbleHudPair.Value;
-            Vector2 canvasPos = WorldToCanvasPosition(canvas, bubbleHudsContainer, Camera.main, bubble.transform.position);
-            hud.SetPosition(canvasPos);
+
+            Vector2 screenPoint = Root.Instance.CameraController.WorldToScreenPoint(bubble.transform.position);
+            Vector2 localPoint;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(bubbleHudsContainer, screenPoint, null, out localPoint))
+            {
+                hud.SetPosition(localPoint);
+            }
+            
         }
     }
 

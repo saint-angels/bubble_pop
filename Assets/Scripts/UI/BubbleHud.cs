@@ -14,8 +14,6 @@ public class BubbleHud : MonoBehaviour
 
     public void SetPosition(Vector2 newPosition)
     {
-        //TODO: Make it anchor-independent
-        rectTransform.anchoredPosition = newPosition;
-        
+        transform.localPosition = newPosition;
     }
 }
