@@ -5,11 +5,10 @@ using System.Linq;
 using DG.Tweening;
 using System;
 
-public class BubbleGrid : MonoBehaviour
+public class GridManager : MonoBehaviour
 {
     public event Action<int> OnBubblesMerged = (afterMergePower) => { };
     public event Action OnNothingMergedTurn = () => { };
-
 
     //Move to settings?
     public float BubbleSize => bubbleSize;
@@ -269,7 +268,7 @@ public class BubbleGrid : MonoBehaviour
                 {
                     if (hangingBubbles.Contains(b) == false)
                     {
-                        DestroyBubble(b, Bubble.BubbleDeathType.FALL);
+                        DestroyBubble(b, Bubble.BubbleDeathType.DROP);
                     }
 
                 }

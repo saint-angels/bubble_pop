@@ -18,7 +18,7 @@ public class Bubble : MonoBehaviour
     {
         SILENT,
         EXPLOSION,
-        FALL
+        DROP
     }
 
     [System.Serializable]
@@ -110,8 +110,10 @@ public class Bubble : MonoBehaviour
                 newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForPower(Power));
                 Death();
                 break;
-            case BubbleDeathType.FALL:
-                var fallTween = transform.DOMove(transform.position + Vector3.down * 10f, animationCfg.bubbleFallDuration).SetEase(Ease.InOutQuint);
+            case BubbleDeathType.DROP:
+                Vector3 horizontalOffset = UnityEngine.Random.value > .5f ? Vector3.right : Vector3.left;
+                Vector3 endPosition = transform.position + horizontalOffset * 2f + Vector3.down * 10f;
+                var fallTween = transform.DOJump(endPosition, 3f, 1, animationCfg.bubbleFallDuration).SetEase(animationCfg.bubbleFallEase);
                 fallTween.OnComplete(() =>
                 {
                     Death();

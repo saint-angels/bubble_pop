@@ -6,14 +6,14 @@ public class Root : SingletonComponent<Root>
 {
     public GameController GameController => gameController;
     public UIManager UI => uiManager;
-    public BubbleGrid Grid => grid;
+    public GridManager Grid => grid;
     public BubbleGun Gun => gun;
     public ConfigManager ConfigManager => configManager;
     public CameraController CameraController => cameraController;
 
     [SerializeField] private GameController gameController = null;
     [SerializeField] private UIManager uiManager = null;
-    [SerializeField] private BubbleGrid grid = null;
+    [SerializeField] private GridManager grid = null;
     [SerializeField] private BubbleGun gun = null;
     [SerializeField] private ConfigManager configManager = null;
     [SerializeField] private CameraController cameraController = null;

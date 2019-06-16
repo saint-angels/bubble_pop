@@ -15,7 +15,7 @@ public class BubbleGun : MonoBehaviour
 
     private List<Vector3> trajectoryPositionsCurrent = new List<Vector3>();
     private Vector2Int? targetSlot = null;
-    private BubbleGrid grid;
+    private GridManager grid;
     private AnimationCfg animationCfg;
     private BubblesConfig bubblesConfig;
     private Vector3 altBubbleOffset;
