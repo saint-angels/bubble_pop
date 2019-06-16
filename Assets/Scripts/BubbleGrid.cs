@@ -7,7 +7,7 @@ using System;
 
 public class BubbleGrid : MonoBehaviour
 {
-    public event Action<uint> OnBubblesMerged = (afterMergeNumber) => { };
+    public event Action<int> OnBubblesMerged = (afterMergePower) => { };
     public event Action OnNothingMergedTurn = () => { };
 
 
@@ -50,7 +50,6 @@ public class BubbleGrid : MonoBehaviour
 
         this.sqMaxSlotSnapDistance = Mathf.Pow(bubbleSize, 2);
 
-        //SpawnMore();
         FinishTurn();
     }
 
@@ -67,9 +66,9 @@ public class BubbleGrid : MonoBehaviour
         if (bubblesActionSet.Count > 1)
         {
             List<Bubble> bubblesMatched = new List<Bubble>(bubblesActionSet);
-            uint afterMergeNumber = bubblesConfig.GetUpgradedType(bubblesMatched[0].Number, bubblesMatched.Count - 1);
+            int afterMergePower = bubblesMatched[0].Power + bubblesMatched.Count - 1;
             bubblesMatched = bubblesMatched
-                                .OrderByDescending((b) => DoesBubbleHaveNeighbourWithNumber(b, afterMergeNumber))
+                                .OrderByDescending((b) => DoesBubbleHaveNeighbourWithPower(b, afterMergePower))
                                 .ThenByDescending(b => b.transform.position.y)
                                 .ToList();
 
@@ -88,12 +87,13 @@ public class BubbleGrid : MonoBehaviour
             }
             mergeSequence.OnComplete(() =>
             {
-                OnBubblesMerged(afterMergeNumber);
-                targetMergeBubble.Upgrade(afterMergeNumber);
+                OnBubblesMerged(afterMergePower);
+                targetMergeBubble.Upgrade(afterMergePower);
 
-                if (targetMergeBubble.Number >= bubblesConfig.explosionThreshold)
+                if (targetMergeBubble.Power >= bubblesConfig.explosionThresholdPower)
                 {
-                    Explode(targetMergeBubble, bubblesConfig.explosionRange);
+                    Explode(targetMergeBubble);
+                    FinishTurn();
                 }
                 else
                 {
@@ -155,17 +155,17 @@ public class BubbleGrid : MonoBehaviour
 
     public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false)
     {
-        uint minBubbleNumber = uint.MaxValue;
+        int minBubblePower = int.MaxValue;
         IterateOverGrid((x, y, bubble) =>
         {
-            if (bubble != null && bubble.Number < minBubbleNumber)
+            if (bubble != null && bubble.Power < minBubblePower)
             {
-                minBubbleNumber = bubble.Number;
+                minBubblePower = bubble.Power;
             }
         });
 
 
-        List<uint> bottomTwoRowsBubbles = new List<uint>();
+        List<int> bottomTwoRowsBubbles = new List<int>();
         for (int x = 0; x < gridWidth; x++)
         {
             int columnBubblesReviewed = 0;
@@ -175,7 +175,7 @@ public class BubbleGrid : MonoBehaviour
                 {
                     if (grid[x, y] != null)
                     {
-                        bottomTwoRowsBubbles.Add(grid[x, y].Number);
+                        bottomTwoRowsBubbles.Add(grid[x, y].Power);
                         columnBubblesReviewed++;
                     }
                 }
@@ -183,14 +183,14 @@ public class BubbleGrid : MonoBehaviour
         }
 
         int randomBottomBubbleIndex = UnityEngine.Random.Range(0, bottomTwoRowsBubbles.Count);
-        uint randomBottomBubbleNumber = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
+        int randomBottomBubblePower = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
 
-        uint bubbleNumber = bubblesConfig.GetNumberToSpawn(Root.Instance.GameController.Score, minBubbleNumber, randomBottomBubbleNumber);
+        int bubblePower = bubblesConfig.GetPowerToSpawn(Root.Instance.GameController.Score, minBubblePower, randomBottomBubblePower);
         Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
         newBubble.SetGridPosition(0, 0);
         float size = altBubbleSize ? AltBubbleSize : bubbleSize;
         newBubble.transform.localScale = Vector3.one * size;
-        newBubble.Init(bubbleNumber, interactive);
+        newBubble.Init(bubblePower, interactive);
         Root.Instance.UI.AddHudToBubble(newBubble);
         return newBubble;
     }
@@ -202,33 +202,41 @@ public class BubbleGrid : MonoBehaviour
         return dy + Mathf.Max(0, (dx - dy) / 2);
     }
 
-    private void Explode(Bubble originBubble, int maxDistance)
+    private void Explode(Bubble originBubble)
     {
         List<Bubble> bubblesToExplode = new List<Bubble>();
 
         IterateOverGrid((x, y, bubble) =>
         {
             //Can optimize that
-            if (bubble != null && Distance(originBubble, bubble) <= maxDistance)
+            if (bubble != null && Distance(originBubble, bubble) <= bubblesConfig.explosionRange)
             {
                 bubblesToExplode.Add(bubble);
             }
         });
 
+        int explosionPower = int.MaxValue;
+        int explodingBubbles = bubblesToExplode.Count;
         for (int i = bubblesToExplode.Count - 1; i >= 0; i--)
         {
+            if (bubblesToExplode[i].Power < explosionPower)
+            {
+                explosionPower = bubblesToExplode[i].Power;
+            }
             DestroyBubble(bubblesToExplode[i], Bubble.BubbleDeathType.EXPLOSION);
         }
+
+        OnBubblesMerged(explosionPower * explodingBubbles);
     }
 
-    private bool DoesBubbleHaveNeighbourWithNumber(Bubble bubble, uint number)
+    private bool DoesBubbleHaveNeighbourWithPower(Bubble bubble, int power)
     {
-        foreach (var neighbourIndeces in bubble.GetNeighbourSlotIndeces())
+        foreach (Vector2Int neighbourIndeces in bubble.GetNeighbourSlotIndeces())
         {
             if (PointOnHexGrid(neighbourIndeces.x, neighbourIndeces.y))
             {
                 Bubble neighbourBubble = grid[neighbourIndeces.x, neighbourIndeces.y];
-                if (bubble != null && bubble.Number == number)
+                if (bubble != null && bubble.Power == power)
                 {
                     return true;
                 }
@@ -439,7 +447,7 @@ public class BubbleGrid : MonoBehaviour
         foreach (var neighbourBubble in neighbours)
         {
 
-            if (neighbourBubble.Number == originBubble.Number && bubblesActionSet.Contains(neighbourBubble) == false)
+            if (neighbourBubble.Power == originBubble.Power && bubblesActionSet.Contains(neighbourBubble) == false)
             {
                 bubblesActionSet.Add(originBubble);
                 bubblesActionSet.Add(neighbourBubble);
@@ -452,21 +460,5 @@ public class BubbleGrid : MonoBehaviour
     {
         bool doubledHexGridCheck = (x + y) % 2 == 0;
         return doubledHexGridCheck && x < gridWidth && 0 <= x && y < gridHeight && 0 <= y;
-    }
-
-    private void SpawnMore()
-    {
-        for (int x = 0; x < gridWidth; x++)
-        {
-            for (int y = 3; y < gridHeight; y++)
-            {
-                if (PointOnHexGrid(x,y))
-                {
-                    Bubble newBubble = CreateNewBubble(true);
-                    newBubble.transform.position = IndecesToPosition(x, y);
-                    SetBubbleGridIndeces(newBubble, x, y);
-                }
-            }
-        }
     }
 }

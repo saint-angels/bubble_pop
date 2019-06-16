@@ -25,6 +25,8 @@ MonoBehaviour:
   - {r: 0.25490198, g: 0.6509804, b: 0.96470594, a: 1}
   - {r: 0.45098042, g: 0.93725497, b: 0.9686275, a: 1}
   - {r: 0.5803922, g: 0.6901961, b: 0.7607844, a: 1}
-  rangeOfPowers: 4
-  explosionRange: 3
-  explosionThreshold: 2048
+  - {r: 0.76862746, g: 0.27058825, b: 0.4117647, a: 1}
+  spawnPowerRange: 3
+  maxCombo: 10
+  explosionRange: 1
+  explosionThresholdPower: 11

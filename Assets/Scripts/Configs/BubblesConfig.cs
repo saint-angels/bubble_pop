@@ -6,42 +6,34 @@ using UnityEngine;
 public class BubblesConfig : ScriptableObject
 {
     public Color[] bubbleColors = null;
-    public int rangeOfPowers = 3;
+    public int spawnPowerRange = 3;
 
     public uint maxCombo = 10;
 
     public int explosionRange = 3;
-    public uint explosionThreshold = 2048;
+    public int explosionThresholdPower = 11;
 
-    public Color ColorForNumber(uint number)
+    public Color ColorForPower(int power)
     {
-        int powerOfTwo = (int)Mathf.Log(number, 2);
-        int colorIndex = powerOfTwo % bubbleColors.Length;
+        int colorIndex = power % bubbleColors.Length;
         return bubbleColors[colorIndex];
     }
 
-    public uint GetNumberToSpawn(uint currentScore, uint minBubbleNumber, uint randomBottomBubbleNumber)
+    public int GetPowerToSpawn(uint currentScore, int minBubblePower, int randomBottomBubblePower)
     {
-        bool gridEmpty = randomBottomBubbleNumber == 0;
+        bool gridEmpty = randomBottomBubblePower == 0;
         //if (gridEmpty)
         {
             //This version uses current score & min grid bubble number
             int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
-            int bubblesSuggestedPower = (int)Mathf.Log(minBubbleNumber, 2);
 
-            int minPossiblePower = Mathf.Min(scoreSuggestedPower, bubblesSuggestedPower) + 1;
-            return (uint)Mathf.Pow(2, Random.Range(minPossiblePower, minPossiblePower + rangeOfPowers));
+            int minPossiblePower = Mathf.Min(scoreSuggestedPower, minBubblePower) + 1;
+            return Random.Range(minPossiblePower, minPossiblePower + spawnPowerRange);
         }
         //else
         //{
         //    //Stupid and predictable
         //    return randomBottomBubbleNumber;
         //}
-    }
-
-    public uint GetUpgradedType(uint bubbleNumber, int upgradeLevel)
-    {
-        int powerOfTwoOriginal = (int)System.Math.Log(bubbleNumber, 2);
-        return (uint)Mathf.Pow(2, powerOfTwoOriginal + upgradeLevel);
     }
 }

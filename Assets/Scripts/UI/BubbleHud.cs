@@ -7,9 +7,9 @@ public class BubbleHud : MonoBehaviour
     [SerializeField] private TMPro.TextMeshProUGUI numberLabel = null;
     [SerializeField] private RectTransform rectTransform = null;
 
-    public void Init(uint bubbleNumber)
+    public void Init(int bubblePower)
     {
-        numberLabel.text = NumberFormatHelper.FormatNumberBubble(bubbleNumber);
+        numberLabel.text = NumberFormatHelper.FormatNumberBubble(bubblePower);
     }
 
     public void SetPosition(Vector2 newPosition)

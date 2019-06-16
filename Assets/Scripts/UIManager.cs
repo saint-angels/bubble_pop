@@ -18,7 +18,7 @@ public class UIManager : MonoBehaviour
         Vector3 bubbleCanvasPosition = RectTransformUtility.WorldToScreenPoint(Camera.main, bubble.transform.position);
 
         BubbleHud newHud = ObjectPool.Spawn(bubbleHudPrefab, Vector3.zero, Quaternion.identity, bubbleHudsContainer);
-        newHud.Init(bubble.Number);
+        newHud.Init(bubble.Power);
         newHud.SetPosition(bubbleCanvasPosition);
 
         bubbleHuds.Add(bubble, newHud);
@@ -32,7 +32,7 @@ public class UIManager : MonoBehaviour
 
     private void Bubble_OnUpgrade(Bubble bubble)
     {
-        bubbleHuds[bubble].Init(bubble.Number);
+        bubbleHuds[bubble].Init(bubble.Power);
     }
 
     private void Bubble_OnDeath(Bubble bubble)

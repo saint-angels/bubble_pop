@@ -36,10 +36,12 @@ public class GameController : MonoBehaviour
 
     }
 
-    private void OnBubblesMerged(uint mergedBubbleNumber)
+    private void OnBubblesMerged(int mergedBubblePower)
     {
         combo = (uint)Mathf.Min(bubblesConfig.maxCombo, combo + 1);
-        score += mergedBubbleNumber * combo;
+        uint scoreBonus = (uint)Mathf.Pow(2, mergedBubblePower) * combo;
+        //print($"Score bonus {scoreBonus}");
+        score += scoreBonus;
         OnScoreUpdated(score);
         OnComboUpdated(combo);
     }

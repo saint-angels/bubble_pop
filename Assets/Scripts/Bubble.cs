@@ -31,7 +31,8 @@ public class Bubble : MonoBehaviour
     public event Action<Bubble> OnUpgrade = (bubble) => { };
     public event Action<Bubble> OnDeath = (bubble) => { };
 
-    public uint Number { get; private set; }
+    //Power of 2
+    public int Power { get; private set; }
 
     public int X { get; set; }
     public int Y { get; set; }
@@ -62,18 +63,18 @@ public class Bubble : MonoBehaviour
         this.Y = y;
     }
 
-    public void Init(uint bubbleNumber, bool interactible)
+    public void Init(int power, bool interactible)
     {
         this.animationCfg = Root.Instance.ConfigManager.Animation;
-        Number = bubbleNumber;
-        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number);
+        Power = power;
+        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForPower(Power);
         SetInteractible(interactible);
     }
 
-    public void Upgrade(uint newNumber)
+    public void Upgrade(int newNumber)
     {
-        Number = newNumber;
-        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number);
+        Power = newNumber;
+        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForPower(Power);
         OnUpgrade(this);
     }
 
@@ -106,7 +107,7 @@ public class Bubble : MonoBehaviour
                 break;
             case BubbleDeathType.EXPLOSION:
                 ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
-                newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number));
+                newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForPower(Power));
                 Death();
                 break;
             case BubbleDeathType.FALL:
