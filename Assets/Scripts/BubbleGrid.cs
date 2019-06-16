@@ -50,8 +50,8 @@ public class BubbleGrid : MonoBehaviour
 
         this.sqMaxSlotSnapDistance = Mathf.Pow(bubbleSize, 2);
 
-        SpawnMore();
-        //FinishTurn();
+        //SpawnMore();
+        FinishTurn();
     }
 
     public void AttachBubble(Bubble newBubble, int x, int y, bool shotFromGun)
@@ -268,33 +268,8 @@ public class BubbleGrid : MonoBehaviour
             }
         }
 
-        //Find number of free lines
-        int bottomFreeLinesCount = 0;
-        bool bottomBubbleFound = false;
-        for (int y = 0; y < gridHeight; y++)
-        {
-            for (int x = 0; x < gridWidth; x++)
-            {
-                if (grid[x, y] != null)
-                {
-                    bottomBubbleFound = true;
-                }
-            }
-            if (bottomBubbleFound)
-            {
-                break;
-            }
-            else
-            {
-                bottomFreeLinesCount++;
-            }
-        }
-        //Debug.Log($"Bottom free lines number:{bottomFreeLinesCount}");
-
-
-
         //Shift up, if whole height of the grid is used
-        if (bottomFreeLinesCount == 0)
+        if (GetBottomFreeLines() == 0)
         {
             Sequence bubbleShiftUpSequence = DOTween.Sequence();
             for (int x = 0; x < gridWidth; x++)
@@ -322,30 +297,35 @@ public class BubbleGrid : MonoBehaviour
             }
         }
 
+        FillTopGridSpace();
+
         //Try shift down
         //TODO: The more free lines, the bigger the chance of shift. All screen lines free = 100% chance?
+        int bottomFreeLinesCount = GetBottomFreeLines();
         if (bottomFreeLinesCount >= freeLinesRequiredForShiftDown)
         {
             Sequence shiftDownSequence = DOTween.Sequence();
-            for (int x = 0; x < gridWidth; x++)
+            int shiftOffsetY = 2 * ((bottomFreeLinesCount - 1) / 2);
+            IterateOverGrid((x, y, bubble) =>
             {
-                for (int y = bottomFreeLinesCount - 1; y < gridHeight; y++)
+                if (bubble != null)
                 {
-                    Bubble bubble = grid[x, y];
-                    if (bubble != null)
-                    {
-                        bubble.transform.DOKill();
-                        SetBubbleGridIndeces(bubble, x, y - 2);
-                        Vector3 newBubblePosition = IndecesToPosition(x, y - 2);
-                        Tween shiftDownTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
-                        shiftDownSequence.Insert(0, shiftDownTween);
-                    }
+                    bubble.transform.DOKill();
+                    SetBubbleGridIndeces(bubble, x, y - shiftOffsetY);
+                    Vector3 newBubblePosition = IndecesToPosition(x, y - shiftOffsetY);
+                    Tween shiftDownTween = bubble.transform.DOMove(newBubblePosition, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+                    shiftDownSequence.Insert(0, shiftDownTween);
                 }
-            }
+            });
         }
 
 
         //Add top bubbles, if needed
+        FillTopGridSpace();
+    }
+
+    private void FillTopGridSpace()
+    {
         for (int x = 0; x < gridWidth; x++)
         {
             for (int y = gridHeight - topUnderstroyableLinesHeight; y < gridHeight; y++)
@@ -358,6 +338,32 @@ public class BubbleGrid : MonoBehaviour
                 }
             }
         }
+    }
+
+    private int GetBottomFreeLines()
+    {
+        int bottomFreeLinesCount = 0;
+        bool bottomBubbleFound = false;
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                if (grid[x, y] != null)
+                {
+                    bottomBubbleFound = true;
+                }
+            }
+            if (bottomBubbleFound)
+            {
+                break;
+            }
+            else
+            {
+                bottomFreeLinesCount++;
+            }
+        }
+        //Debug.Log($"Bottom free lines number:{bottomFreeLinesCount}");
+        return bottomFreeLinesCount;
     }
 
     private void SetBubbleGridIndeces(Bubble bubble, int x, int y)
