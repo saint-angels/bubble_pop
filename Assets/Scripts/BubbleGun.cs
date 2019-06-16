@@ -192,7 +192,7 @@ public class BubbleGun : MonoBehaviour
                 Vector2Int gunTargetSlot = targetSlot.Value;
                 moveTween.OnComplete(() => 
                 {
-                    grid.AttachBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y);
+                    grid.AttachBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y, true);
                     LoadGun();
                 });
 

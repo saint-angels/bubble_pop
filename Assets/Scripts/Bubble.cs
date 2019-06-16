@@ -16,6 +16,7 @@ public class Bubble : MonoBehaviour
 
     public enum BubbleDeathType
     {
+        SILENT,
         EXPLOSION,
         FALL
     }
@@ -100,6 +101,9 @@ public class Bubble : MonoBehaviour
 
         switch (deathType)
         {
+            case BubbleDeathType.SILENT:
+                Death();
+                break;
             case BubbleDeathType.EXPLOSION:
                 ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
                 newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForNumber(Number));

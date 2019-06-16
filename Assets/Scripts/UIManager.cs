@@ -9,6 +9,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RectTransform bubbleHudsContainer = null;
 
     [SerializeField] private TMPro.TextMeshProUGUI scoreLabel = null;
+    [SerializeField] private TMPro.TextMeshProUGUI comboLabel = null;
 
     private Dictionary<Bubble, BubbleHud> bubbleHuds = new Dictionary<Bubble, BubbleHud>();
 
@@ -53,12 +54,19 @@ public class UIManager : MonoBehaviour
     {
         scoreLabel.text = NumberFormatHelper.FormatNumberScore(newScore);
     }
+    private void OnComboUpdated(uint newCombo)
+    {
+        comboLabel.text = $"x{newCombo}";
+    }
 
     private void Start()
     {
         Root.Instance.GameController.OnScoreUpdated += OnScoreUpdated;
-        //Clear the score on start
+        Root.Instance.GameController.OnComboUpdated += OnComboUpdated;
+
+        //Clear the score & combo on start
         OnScoreUpdated(0);
+        OnComboUpdated(0);
     }
     
     void LateUpdate()

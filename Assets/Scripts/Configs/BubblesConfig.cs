@@ -8,6 +8,7 @@ public class BubblesConfig : ScriptableObject
     public Color[] bubbleColors = null;
     public int rangeOfPowers = 3;
 
+    public uint maxCombo = 10;
 
     public int explosionRange = 3;
     public uint explosionThreshold = 2048;

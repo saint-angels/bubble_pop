@@ -8,6 +8,7 @@ using System;
 public class BubbleGrid : MonoBehaviour
 {
     public event Action<uint> OnBubblesMerged = (afterMergeNumber) => { };
+    public event Action OnNothingMergedTurn = () => { };
 
 
     //Move to settings?
@@ -53,13 +54,12 @@ public class BubbleGrid : MonoBehaviour
         //FinishTurn();
     }
 
-    public void AttachBubble(Bubble newBubble, int x, int y)
+    public void AttachBubble(Bubble newBubble, int x, int y, bool shotFromGun)
     {
         SetBubbleGridIndeces(newBubble, x, y);
         newBubble.transform.position = IndecesToPosition(x, y);
         newBubble.SetInteractible(true);
 
-        //TODO: If attach bubble gonna be called not only from gun(multiple matches of diff numbers in a row?), don't clean hashset here
         bubblesActionSet.Clear();
 
         CheckMatches(newBubble);
@@ -97,13 +97,17 @@ public class BubbleGrid : MonoBehaviour
                 }
                 else
                 {
-                    AttachBubble(targetMergeBubble, targetMergeBubble.X, targetMergeBubble.Y);
+                    AttachBubble(targetMergeBubble, targetMergeBubble.X, targetMergeBubble.Y, false);
                 }
 
             });
         }
         else
         {
+            if (shotFromGun)
+            {
+                OnNothingMergedTurn();
+            }
             FinishTurn();
         }
     }
@@ -303,7 +307,7 @@ public class BubbleGrid : MonoBehaviour
                         bool topHiddenRows = gridHeight - 2 <= y;
                         if (topHiddenRows)
                         {
-                            DestroyBubble(bubble, Bubble.BubbleDeathType.EXPLOSION);
+                            DestroyBubble(bubble, Bubble.BubbleDeathType.SILENT);
                         }
                         else
                         {
