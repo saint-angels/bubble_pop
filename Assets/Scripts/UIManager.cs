@@ -37,10 +37,10 @@ public class UIManager : MonoBehaviour
 
     private void Bubble_OnDeath(Bubble bubble)
     {
-        Destroy(bubbleHuds[bubble].gameObject);
+        bubbleHuds[bubble].FloatUp(true);
+        //Destroy(bubbleHuds[bubble].gameObject);
         bubbleHuds.Remove(bubble);
     }
-
 
     private Vector2 WorldToCanvasPosition(Canvas canvas, RectTransform canvasRect, Camera camera, Vector3 position)
     {

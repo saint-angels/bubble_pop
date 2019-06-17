@@ -61,7 +61,7 @@ using System.Collections.Generic;
             public void Despawn(MonoBehaviour clone)
             {
                 clone.gameObject.SetActive(false);
-                clone.transform.parent = poolParent;
+                clone.transform.SetParent(poolParent);
                 inactiveObjects.Push(clone);
             }
         }
