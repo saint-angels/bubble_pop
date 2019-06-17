@@ -15,9 +15,9 @@ public class GridManager : MonoBehaviour
     public float AltBubbleSize => BubbleSize / 1.5f;
 
 
-    [SerializeField] private Bubble bubblePrefab;
-    [SerializeField] private Transform gridOriginPoint;
-    [SerializeField] private GameObject bubbleOutline;
+    [SerializeField] private Bubble bubblePrefab = null;
+    [SerializeField] private Transform gridOriginPoint = null;
+    [SerializeField] private GameObject bubbleOutline = null;
 
     private const float hexSize = .35f;
     private const float bubbleSize = hexSize * 1.732f; //Make bubble fit into a hex

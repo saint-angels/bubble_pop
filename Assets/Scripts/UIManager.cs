@@ -6,13 +6,17 @@ using UnityEngine;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] Canvas canvas;
-    [SerializeField] private BubbleHud bubbleHudPrefab = null;
     [SerializeField] private RectTransform bubbleHudsContainer = null;
+    [SerializeField] private RectTransform topPanel = null;
 
-    [SerializeField] private TMPro.TextMeshProUGUI scoreLabel = null;
-    [SerializeField] private TMPro.TextMeshProUGUI comboLabel = null;
+    [Header("Prefabs")]
+    [SerializeField] private ScoreLabel scoreLabelPrefab = null;
+    [SerializeField] private ComboLabel comboLabelPrefab = null;
+    [SerializeField] private BubbleHud bubbleHudPrefab = null;
 
     private Dictionary<Bubble, BubbleHud> bubbleHuds = new Dictionary<Bubble, BubbleHud>();
+    private ScoreLabel currentScoreLabel;
+    private ComboLabel currentComboLabel;
 
     private AnimationCfg animationCfg;
 
@@ -39,37 +43,31 @@ public class UIManager : MonoBehaviour
 
     private void Bubble_OnDeath(Bubble bubble)
     {
-        bubbleHuds[bubble].FloatUp(true);
-        //Destroy(bubbleHuds[bubble].gameObject);
+        bubbleHuds[bubble].Fade();
         bubbleHuds.Remove(bubble);
     }
 
-    private void OnScoreUpdated(uint newScore)
+    private void OnScoreUpdated(ulong newScore)
     {
-        scoreLabel.text = NumberFormatHelper.FormatNumberScore(newScore);
+        if (currentScoreLabel != null)
+        {
+            currentScoreLabel.Fade(false);
+        }
+        
+        currentScoreLabel = ObjectPool.Spawn(scoreLabelPrefab, Vector3.zero, Quaternion.identity, topPanel);
+        currentScoreLabel.Init(NumberFormatHelper.FormatNumberScore(newScore));
     }
+
     private void OnComboUpdated(uint newCombo)
     {
-        comboLabel.text = $"x{newCombo}";
+        if (currentComboLabel != null)
+        {
+            currentComboLabel.Fade(false);
+        }
+
+        currentComboLabel = ObjectPool.Spawn(comboLabelPrefab, Vector3.zero, Quaternion.identity, topPanel);
+        currentComboLabel.Init($"x{newCombo}");
     }
-
-    //private void FloatUpTextLabel(TMPro.TextMeshProUGUI textLabel)
-    //{
-    //    RectTransform labelRectTransform = textLabel.GetComponent<RectTransform>();
-
-    //    if (withRandomStartOffset)
-    //    {
-    //        Vector2 randomUnitCircle = Random.insideUnitCircle.normalized * animCfg.textFloatRandomOffsetRadius;
-    //        rectTransform.localPosition += new Vector3(randomUnitCircle.x, randomUnitCircle.y, 0);
-    //    }
-
-    //    float targetY = rectTransform.localPosition.y + animCfg.textChangeFloatOffsetY;
-
-    //    textLabel.DOFade(0, animCfg.textChangeFloatDuration);
-
-    //    labelRectTransform.DOLocalMoveY(targetY, animCfg.textChangeFloatDuration).SetEase(animCfg.textChangeFloatEase)
-    //            .OnComplete(() => ObjectPool.Despawn<BubbleHud>(this)); ;
-    //}
 
     private void UpdateBubbleHudPosition(Bubble bubble, BubbleHud hud)
     {
@@ -77,7 +75,7 @@ public class UIManager : MonoBehaviour
         Vector2 localPoint;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(bubbleHudsContainer, screenPoint, null, out localPoint))
         {
-            hud.SetPosition(localPoint);
+            hud.transform.localPosition = localPoint;
         }
     }
 

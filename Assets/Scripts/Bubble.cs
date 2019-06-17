@@ -1,4 +1,5 @@
 ﻿using DG.Tweening;
+using Promises;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,25 +8,11 @@ using UnityEngine;
 [SelectionBase]
 public class Bubble : MonoBehaviour
 {
-    public enum BubbleSide
-    {
-        LEFT,
-        RIGHT,
-        BOTTOM
-    }
-
     public enum BubbleDeathType
     {
         SILENT,
         EXPLOSION,
         DROP
-    }
-
-    [System.Serializable]
-    private struct SidePoint
-    {
-        public BubbleSide sideType;
-        public Transform point;
     }
 
     public event Action<Bubble> OnUpgrade = (bubble) => { };
@@ -38,9 +25,8 @@ public class Bubble : MonoBehaviour
     public int Y { get; set; }
 
     [SerializeField] private new Collider2D collider = null;
-    [SerializeField] private SidePoint[] bubbleSidePoints = null;
     [SerializeField] private new SpriteRenderer renderer = null;
-    [SerializeField] private new Rigidbody2D rb = null;
+    [SerializeField] private Rigidbody2D rb = null;
 
     [Header("VFX")]
     [SerializeField] private ParticleEffectBase vfxExplosion = null;
@@ -106,17 +92,22 @@ public class Bubble : MonoBehaviour
         switch (deathType)
         {
             case BubbleDeathType.SILENT:
-                Death();
+                Die();
                 break;
             case BubbleDeathType.EXPLOSION:
                 ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
                 newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForPower(Power));
-                Death();
+                Die();
                 break;
             case BubbleDeathType.DROP:
                 rb.bodyType = RigidbodyType2D.Dynamic;
+                //TODO: Move to config?
                 Vector2 force = Vector2.up * 3 + Vector2.right * (UnityEngine.Random.value < .5f ? 1 : -1) * 3f;
                 rb.AddForce(force, ForceMode2D.Impulse);
+
+                //Wait until bubble falls under the screen
+                Timers.Instance.WaitForTrue(() => { return transform.position.y < -10f; })
+                    .Done(() => Die()) ;
                 break;
             default:
                 Debug.LogError($"Unknown death type {deathType}");
@@ -124,7 +115,7 @@ public class Bubble : MonoBehaviour
         }
     }
 
-    private void Death()
+    private void Die()
     {
         OnDeath(this);
         ObjectPool.Despawn<Bubble>(this);

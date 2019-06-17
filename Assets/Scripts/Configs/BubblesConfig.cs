@@ -19,16 +19,21 @@ public class BubblesConfig : ScriptableObject
         return bubbleColors[colorIndex];
     }
 
-    public int GetPowerToSpawn(uint currentScore, int minBubblePower, int randomBottomBubblePower)
+    public int GetPowerToSpawn(ulong currentScore, int minBubblePower, int randomBottomBubblePower)
     {
-        bool gridEmpty = randomBottomBubblePower == 0;
+        int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
+        int minPossiblePower = Mathf.Min(scoreSuggestedPower, minBubblePower) + 1;
+        return Random.Range(minPossiblePower, minPossiblePower + spawnPowerRange);
+
+        //More complicated version that doesn't work well
+        //bool gridEmpty = randomBottomBubblePower == 0;
         //if (gridEmpty)
         {
             //This version uses current score & min grid bubble number
-            int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
+            //int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
 
-            int minPossiblePower = Mathf.Min(scoreSuggestedPower, minBubblePower) + 1;
-            return Random.Range(minPossiblePower, minPossiblePower + spawnPowerRange);
+            //int minPossiblePower = Mathf.Min(scoreSuggestedPower, minBubblePower) + 1;
+            //return Random.Range(minPossiblePower, minPossiblePower + spawnPowerRange);
         }
         //else
         //{

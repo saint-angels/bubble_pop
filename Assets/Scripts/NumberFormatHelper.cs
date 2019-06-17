@@ -28,15 +28,16 @@ public static class NumberFormatHelper
         return bubbleNumber.ToString();
     }
 
-    public static string FormatNumberScore(uint number)
+    public static string FormatNumberScore(ulong number)
     {
         for (int i = abbrevations.Count - 1; i >= 0; i--)
         {
             KeyValuePair<ulong, string> pair = abbrevations.ElementAt(i);
             if (Mathf.Abs(number) >= pair.Key)
             {
-                int roundedNumber = Mathf.FloorToInt(number / pair.Key);
-                return roundedNumber.ToString() + pair.Value;
+                double roundedNumber = number / (double)pair.Key;
+                string numberString = roundedNumber.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+                return numberString + pair.Value;
             }
         }
         return number.ToString();

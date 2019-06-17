@@ -5,15 +5,15 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    public event Action<uint> OnScoreUpdated = (newScore) => { };
+    public event Action<ulong> OnScoreUpdated = (newScore) => { };
     public event Action<uint> OnComboUpdated = (newCombo) => { };
 
-    public uint Score => score;
+    public ulong Score => score;
 
     private AnimationCfg animationCfg;
     private BubblesConfig bubblesConfig;
 
-    private uint score = 0;
+    private ulong score = 0;
     private uint combo = 0;
 
     private void Start()
@@ -31,16 +31,31 @@ public class GameController : MonoBehaviour
 
     private void OnNothingMergedTurn()
     {
-        combo = 0;
-        OnComboUpdated(combo);
+        bool comboChanged = combo != 0;
+        if (comboChanged)
+        {
+            combo = 0;
+            OnComboUpdated(combo);
+        }
 
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            //combo = (uint)Mathf.Min(bubblesConfig.maxCombo, combo + 1);
+            //uint scoreBonus = (uint)Mathf.Pow(2, mergedBubblePower) * combo;
+            score *= 2;
+            OnScoreUpdated(score);
+            OnComboUpdated(combo);
+        }
     }
 
     private void OnBubblesMerged(int mergedBubblePower)
     {
         combo = (uint)Mathf.Min(bubblesConfig.maxCombo, combo + 1);
         uint scoreBonus = (uint)Mathf.Pow(2, mergedBubblePower) * combo;
-        //print($"Score bonus {scoreBonus}");
         score += scoreBonus;
         OnScoreUpdated(score);
         OnComboUpdated(combo);
