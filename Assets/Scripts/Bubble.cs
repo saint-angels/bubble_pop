@@ -40,6 +40,7 @@ public class Bubble : MonoBehaviour
     [SerializeField] private new Collider2D collider = null;
     [SerializeField] private SidePoint[] bubbleSidePoints = null;
     [SerializeField] private new SpriteRenderer renderer = null;
+    [SerializeField] private new Rigidbody2D rb = null;
 
     [Header("VFX")]
     [SerializeField] private ParticleEffectBase vfxExplosion = null;
@@ -65,6 +66,8 @@ public class Bubble : MonoBehaviour
 
     public void Init(int power, bool interactible)
     {
+        rb.bodyType = RigidbodyType2D.Kinematic;
+
         this.animationCfg = Root.Instance.ConfigManager.Animation;
         Power = power;
         renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForPower(Power);
@@ -111,13 +114,9 @@ public class Bubble : MonoBehaviour
                 Death();
                 break;
             case BubbleDeathType.DROP:
-                Vector3 horizontalOffset = UnityEngine.Random.value > .5f ? Vector3.right : Vector3.left;
-                Vector3 endPosition = transform.position + horizontalOffset * 2f + Vector3.down * 10f;
-                var fallTween = transform.DOJump(endPosition, 3f, 1, animationCfg.bubbleFallDuration).SetEase(animationCfg.bubbleFallEase);
-                fallTween.OnComplete(() =>
-                {
-                    Death();
-                });
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                Vector2 force = Vector2.up * 3 + Vector2.right * (UnityEngine.Random.value < .5f ? 1 : -1) * 3f;
+                rb.AddForce(force, ForceMode2D.Impulse);
                 break;
             default:
                 Debug.LogError($"Unknown death type {deathType}");

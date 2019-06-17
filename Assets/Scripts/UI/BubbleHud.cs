@@ -40,7 +40,5 @@ public class BubbleHud : MonoBehaviour
 
         rectTransform.DOLocalMoveY(targetY, animCfg.textChangeFloatDuration).SetEase(animCfg.textChangeFloatEase)
                 .OnComplete(() => ObjectPool.Despawn<BubbleHud>(this)); ;
-
-        
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,13 +14,14 @@ public class UIManager : MonoBehaviour
 
     private Dictionary<Bubble, BubbleHud> bubbleHuds = new Dictionary<Bubble, BubbleHud>();
 
+    private AnimationCfg animationCfg;
+
     public void AddHudToBubble(Bubble bubble)
     {
-        Vector3 bubbleCanvasPosition = RectTransformUtility.WorldToScreenPoint(Camera.main, bubble.transform.position);
-
         BubbleHud newHud = ObjectPool.Spawn(bubbleHudPrefab, Vector3.zero, Quaternion.identity, bubbleHudsContainer);
         newHud.Init(bubble.Power);
-        newHud.SetPosition(bubbleCanvasPosition);
+
+        UpdateBubbleHudPosition(bubble, newHud);
 
         bubbleHuds.Add(bubble, newHud);
 
@@ -42,14 +44,6 @@ public class UIManager : MonoBehaviour
         bubbleHuds.Remove(bubble);
     }
 
-    private Vector2 WorldToCanvasPosition(Canvas canvas, RectTransform canvasRect, Camera camera, Vector3 position)
-    {
-        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(camera, position);
-        Vector2 result;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : camera, out result);
-        return canvas.transform.TransformPoint(result);
-    }
-
     private void OnScoreUpdated(uint newScore)
     {
         scoreLabel.text = NumberFormatHelper.FormatNumberScore(newScore);
@@ -59,8 +53,39 @@ public class UIManager : MonoBehaviour
         comboLabel.text = $"x{newCombo}";
     }
 
+    //private void FloatUpTextLabel(TMPro.TextMeshProUGUI textLabel)
+    //{
+    //    RectTransform labelRectTransform = textLabel.GetComponent<RectTransform>();
+
+    //    if (withRandomStartOffset)
+    //    {
+    //        Vector2 randomUnitCircle = Random.insideUnitCircle.normalized * animCfg.textFloatRandomOffsetRadius;
+    //        rectTransform.localPosition += new Vector3(randomUnitCircle.x, randomUnitCircle.y, 0);
+    //    }
+
+    //    float targetY = rectTransform.localPosition.y + animCfg.textChangeFloatOffsetY;
+
+    //    textLabel.DOFade(0, animCfg.textChangeFloatDuration);
+
+    //    labelRectTransform.DOLocalMoveY(targetY, animCfg.textChangeFloatDuration).SetEase(animCfg.textChangeFloatEase)
+    //            .OnComplete(() => ObjectPool.Despawn<BubbleHud>(this)); ;
+    //}
+
+    private void UpdateBubbleHudPosition(Bubble bubble, BubbleHud hud)
+    {
+        Vector2 screenPoint = Root.Instance.CameraController.WorldToScreenPoint(bubble.transform.position);
+        Vector2 localPoint;
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(bubbleHudsContainer, screenPoint, null, out localPoint))
+        {
+            hud.SetPosition(localPoint);
+        }
+    }
+
     private void Start()
     {
+        animationCfg = Root.Instance.ConfigManager.Animation;
+
+
         Root.Instance.GameController.OnScoreUpdated += OnScoreUpdated;
         Root.Instance.GameController.OnComboUpdated += OnComboUpdated;
 
@@ -75,14 +100,7 @@ public class UIManager : MonoBehaviour
         {
             Bubble bubble = bubbleHudPair.Key;
             BubbleHud hud = bubbleHudPair.Value;
-
-            Vector2 screenPoint = Root.Instance.CameraController.WorldToScreenPoint(bubble.transform.position);
-            Vector2 localPoint;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(bubbleHudsContainer, screenPoint, null, out localPoint))
-            {
-                hud.SetPosition(localPoint);
-            }
-            
+            UpdateBubbleHudPosition(bubble, hud);
         }
     }
 
