@@ -21,6 +21,6 @@ MonoBehaviour:
   bubbleShiftDuration: 0.5
   bubbleShiftEase: 16
   textChangeFloatOffsetY: 20
-  textFloatRandomOffsetRadius: 5
+  textFloatRandomOffsetRadius: 10
   textChangeFloatDuration: 0.5
   textChangeFloatEase: 6

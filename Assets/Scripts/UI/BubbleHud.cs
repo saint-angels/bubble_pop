@@ -30,7 +30,7 @@ public class BubbleHud : MonoBehaviour
 
         if (withRandomStartOffset)
         {
-            Vector2 randomUnitCircle = Random.insideUnitCircle * animCfg.textFloatRandomOffsetRadius;
+            Vector2 randomUnitCircle = Random.insideUnitCircle.normalized * animCfg.textFloatRandomOffsetRadius;
             rectTransform.localPosition += new Vector3(randomUnitCircle.x, randomUnitCircle.y, 0);
         }
 
