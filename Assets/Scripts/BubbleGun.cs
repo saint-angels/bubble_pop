@@ -27,6 +27,8 @@ public class BubbleGun : MonoBehaviour
 
     private const float aimingRestrictedScreenFraction = .2f;
 
+    private bool paused = false;
+
     public void Init()
     {
         this.grid = Root.Instance.Grid;
@@ -39,8 +41,14 @@ public class BubbleGun : MonoBehaviour
         layerWalls = LayerMask.NameToLayer("Walls");
         layerBubbles = LayerMask.NameToLayer("Bubbles");
 
+        Root.Instance.UI.OnGamePauseShown += UI_OnGamePauseShown; ;
 
-    LoadGun();
+        LoadGun();
+    }
+
+    private void UI_OnGamePauseShown(bool isPauseShown)
+    {
+        paused = isPauseShown;
     }
 
     //Shouldn't take control away from the player 
@@ -82,6 +90,12 @@ public class BubbleGun : MonoBehaviour
 
     void Update()
     {
+        if (paused)
+        {
+            return;
+        }
+
+
         bool aiming = Input.mousePosition.y / Screen.height > aimingRestrictedScreenFraction;
         Vector3 mousePosition = Input.mousePosition;
 

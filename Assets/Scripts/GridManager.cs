@@ -9,6 +9,7 @@ public class GridManager : MonoBehaviour
 {
     public event Action<int> OnBubblesMerged = (afterMergePower) => { };
     public event Action OnNothingMergedTurn = () => { };
+    public event Action OnGridCleared = () => { };
 
     //Move to settings?
     public float BubbleSize => bubbleSize;
@@ -24,7 +25,7 @@ public class GridManager : MonoBehaviour
     private const int gridWidth = 12;
     private const int gridHeight = 14;
     private const int topUnderstroyableLinesHeight = 6; //Lines that are restored every turn
-    private const float shiftDownChance = .5f;
+    private const int maxLinesFittingIntoScreen = 7;
     private float sqMaxSlotSnapDistance;
 
     //Shift down settings
@@ -244,7 +245,6 @@ public class GridManager : MonoBehaviour
         return false;
     }
 
-    //TODO: Return promise?
     private void FinishTurn()
     {
         //Check gravity
@@ -307,8 +307,13 @@ public class GridManager : MonoBehaviour
         FillTopGridSpace();
 
         //Try shift down
-        //TODO: The more free lines, the bigger the chance of shift. All screen lines free = 100% chance?
         int bottomFreeLinesCount = GetBottomFreeLines();
+
+        if (bottomFreeLinesCount >= maxLinesFittingIntoScreen)
+        {
+            OnGridCleared();
+        }
+
         if (bottomFreeLinesCount >= freeLinesRequiredForShiftDown)
         {
             Sequence shiftDownSequence = DOTween.Sequence();

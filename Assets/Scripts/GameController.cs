@@ -7,6 +7,7 @@ public class GameController : MonoBehaviour
 {
     public event Action<ulong> OnScoreUpdated = (newScore) => { };
     public event Action<uint> OnComboUpdated = (newCombo) => { };
+    public event Action OnGridCleared = () => { };
 
     public ulong Score => score;
 
@@ -25,6 +26,7 @@ public class GameController : MonoBehaviour
         Root.Instance.Grid.Init();
         Root.Instance.Grid.OnBubblesMerged += OnBubblesMerged;
         Root.Instance.Grid.OnNothingMergedTurn += OnNothingMergedTurn;
+        Root.Instance.Grid.OnGridCleared += OnGridCleared;
 
         Root.Instance.Gun.Init();
     }
@@ -46,9 +48,11 @@ public class GameController : MonoBehaviour
         {
             //combo = (uint)Mathf.Min(bubblesConfig.maxCombo, combo + 1);
             //uint scoreBonus = (uint)Mathf.Pow(2, mergedBubblePower) * combo;
-            score *= 2;
-            OnScoreUpdated(score);
-            OnComboUpdated(combo);
+            //score *= 2;
+            //OnScoreUpdated(score);
+            //OnComboUpdated(combo);
+
+            //OnGridCleared();
         }
     }
 

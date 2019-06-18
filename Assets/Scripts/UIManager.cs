@@ -2,17 +2,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    public event System.Action<bool> OnGamePauseShown = (isShown) => { };
+
     [SerializeField] Canvas canvas;
+    [SerializeField] private Button pauseButton = null;
+
+    [Header("Panels")]
     [SerializeField] private RectTransform bubbleHudsContainer = null;
     [SerializeField] private RectTransform topPanel = null;
+    [SerializeField] private RectTransform centerPanel = null;
+    [SerializeField] private PausePanel pausePanel = null;
 
     [Header("Prefabs")]
     [SerializeField] private ScoreLabel scoreLabelPrefab = null;
     [SerializeField] private ComboLabel comboLabelPrefab = null;
     [SerializeField] private BubbleHud bubbleHudPrefab = null;
+    [SerializeField] private PerfectLabel perfectLabelPrefab = null;
 
     private Dictionary<Bubble, BubbleHud> bubbleHuds = new Dictionary<Bubble, BubbleHud>();
     private ScoreLabel currentScoreLabel;
@@ -69,6 +78,13 @@ public class UIManager : MonoBehaviour
         currentComboLabel.Init($"x{newCombo}");
     }
 
+    private void OnGridCleared()
+    {
+        PerfectLabel newPerfectLabel = ObjectPool.Spawn(perfectLabelPrefab, Vector3.zero, Quaternion.identity, centerPanel);
+        newPerfectLabel.Init("PERFECT");
+        newPerfectLabel.Fade(false);
+    }
+
     private void UpdateBubbleHudPosition(Bubble bubble, BubbleHud hud)
     {
         Vector2 screenPoint = Root.Instance.CameraController.WorldToScreenPoint(bubble.transform.position);
@@ -83,9 +99,22 @@ public class UIManager : MonoBehaviour
     {
         animationCfg = Root.Instance.ConfigManager.Animation;
 
+        pauseButton.onClick.AddListener(() =>
+        {
+            pausePanel.gameObject.SetActive(true);
+            OnGamePauseShown(true);
+        });
+
+        pausePanel.OnResumePressed += () => 
+        {
+            pausePanel.gameObject.SetActive(false);
+            OnGamePauseShown(false);
+        };
+
 
         Root.Instance.GameController.OnScoreUpdated += OnScoreUpdated;
         Root.Instance.GameController.OnComboUpdated += OnComboUpdated;
+        Root.Instance.GameController.OnGridCleared += OnGridCleared;
 
         //Clear the score & combo on start
         OnScoreUpdated(0);
