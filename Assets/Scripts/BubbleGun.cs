@@ -59,7 +59,7 @@ public class BubbleGun : MonoBehaviour
         {
             if (alternativeBubble == null)
             {
-                Bubble newBubble = grid.CreateNewBubble(false);
+                Bubble newBubble = grid.CreateNewBubble(false, false, true);
                 currentBubble = newBubble;
                 currentBubble.transform.position = muzzlePoint.position;
             }
@@ -71,7 +71,7 @@ public class BubbleGun : MonoBehaviour
                 MoveBubbleFromAltPositionToCurrent();
             }
 
-            Bubble newAltBubble = grid.CreateNewBubble(true, true);
+            Bubble newAltBubble = grid.CreateNewBubble(true, true, true);
             newAltBubble.transform.position = AltBubblePoint;
             alternativeBubble = newAltBubble;
         }

@@ -6,6 +6,10 @@ using UnityEngine;
 public class BubblesConfig : ScriptableObject
 {
     public Color[] bubbleColors = null;
+    [UnityEngine.Serialization.FormerlySerializedAs("bubbleColorMono")]
+    public Color bubbleGridColor;
+    public Color bubbleGunColor;
+
     public int spawnPowerRange = 3;
 
     public uint maxCombo = 10;

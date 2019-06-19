@@ -50,20 +50,20 @@ public class Bubble : MonoBehaviour
         this.Y = y;
     }
 
-    public void Init(int power, bool interactible)
+    public void Init(int power, bool interactible, bool gunBubble)
     {
         rb.bodyType = RigidbodyType2D.Kinematic;
 
         this.animationCfg = Root.Instance.ConfigManager.Animation;
         Power = power;
-        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForPower(Power);
+        renderer.color = gunBubble ? Root.Instance.ConfigManager.Bubbles.bubbleGunColor : Root.Instance.ConfigManager.Bubbles.bubbleGridColor;
         SetInteractible(interactible);
     }
 
     public void Upgrade(int newNumber)
     {
         Power = newNumber;
-        renderer.color = Root.Instance.ConfigManager.Bubbles.ColorForPower(Power);
+        renderer.color = Root.Instance.ConfigManager.Bubbles.bubbleGridColor;
         OnUpgrade(this);
     }
 

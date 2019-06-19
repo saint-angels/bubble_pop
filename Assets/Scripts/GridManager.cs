@@ -153,7 +153,8 @@ public class GridManager : MonoBehaviour
         return new Vector3(positionX, positionY, 0);
     }
 
-    public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false)
+    //TODO: Refactor
+    public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false, bool gunBubble = false)
     {
         int minBubblePower = int.MaxValue;
         IterateOverGrid((x, y, bubble) =>
@@ -190,7 +191,7 @@ public class GridManager : MonoBehaviour
         newBubble.SetGridPosition(0, 0);
         float size = altBubbleSize ? AltBubbleSize : bubbleSize;
         newBubble.transform.localScale = Vector3.one * size;
-        newBubble.Init(bubblePower, interactive);
+        newBubble.Init(bubblePower, interactive, gunBubble);
         Root.Instance.UI.AddHudToBubble(newBubble);
         return newBubble;
     }
