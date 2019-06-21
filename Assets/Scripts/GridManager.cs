@@ -57,7 +57,7 @@ public class GridManager : MonoBehaviour
     {
         SetBubbleGridIndeces(newBubble, x, y);
         newBubble.transform.position = IndecesToPosition(x, y);
-        newBubble.SetInteractible(true);
+        newBubble.SetState(Bubble.BubbleState.GRID);
 
         bubblesActionSet.Clear();
 
@@ -154,7 +154,7 @@ public class GridManager : MonoBehaviour
     }
 
     //TODO: Refactor
-    public Bubble CreateNewBubble(bool interactive, bool altBubbleSize = false, bool gunBubble = false)
+    public Bubble CreateNewBubble(Bubble.BubbleState startBubbleState)
     {
         int minBubblePower = int.MaxValue;
         IterateOverGrid((x, y, bubble) =>
@@ -189,9 +189,8 @@ public class GridManager : MonoBehaviour
         int bubblePower = bubblesConfig.GetPowerToSpawn(Root.Instance.GameController.Score, minBubblePower, randomBottomBubblePower);
         Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
         newBubble.SetGridPosition(0, 0);
-        float size = altBubbleSize ? AltBubbleSize : bubbleSize;
-        newBubble.transform.localScale = Vector3.one * size;
-        newBubble.Init(bubblePower, interactive, gunBubble);
+        newBubble.transform.localScale = Vector3.one * bubbleSize;
+        newBubble.Init(bubblePower, startBubbleState);
         Root.Instance.UI.AddHudToBubble(newBubble);
         return newBubble;
     }
@@ -345,7 +344,7 @@ public class GridManager : MonoBehaviour
             {
                 if (grid[x, y] == null && PointOnHexGrid(x, y))
                 {
-                    Bubble newBubble = CreateNewBubble(true);
+                    Bubble newBubble = CreateNewBubble(Bubble.BubbleState.GRID);
                     newBubble.transform.position = IndecesToPosition(x, y);
                     SetBubbleGridIndeces(newBubble, x, y);
                 }

@@ -15,6 +15,14 @@ public class Bubble : MonoBehaviour
         DROP
     }
 
+    public enum BubbleState
+    {
+        GUN,
+        GUN_ALT,
+        GRID,
+        DYING
+    }
+
     public event Action<Bubble> OnUpgrade = (bubble) => { };
     public event Action<Bubble> OnDeath = (bubble) => { };
 
@@ -32,6 +40,7 @@ public class Bubble : MonoBehaviour
     [SerializeField] private ParticleEffectBase vfxExplosion = null;
 
     private AnimationCfg animationCfg;
+    private BubblesConfig bubblesConfig;
 
     private Vector2Int[] neighbourOffsets = new Vector2Int[]
     {
@@ -41,8 +50,39 @@ public class Bubble : MonoBehaviour
         new Vector2Int(-2,0),
         new Vector2Int(-1,1),
         new Vector2Int(1,1),
-
     };
+
+    public void SetState(BubbleState newState)
+    {
+        Color targetColor;
+
+        switch (newState)
+        {
+            case BubbleState.GUN:
+                SetInteractible(false);
+                targetColor = bubblesConfig.bubbleGunColor;
+                break;
+            case BubbleState.GUN_ALT:
+                SetInteractible(true);
+                targetColor = bubblesConfig.bubbleGunColor;
+                break;
+            case BubbleState.GRID:
+                SetInteractible(true);
+                targetColor = bubblesConfig.bubbleGridColor;
+                break;
+            case BubbleState.DYING:
+                SetInteractible(false);
+                targetColor = bubblesConfig.bubbleGridColor;
+                break;
+            default:
+                Debug.LogWarning($"Unknown state {newState}");
+                targetColor = Color.white;
+                break;
+        }
+
+        renderer.DOKill();
+        renderer.DOColor(targetColor, animationCfg.bubbleChangeColorDuration).SetEase(animationCfg.bubbleChangeColorEase);
+    }
 
     public void SetGridPosition(int x, int y)
     {
@@ -50,14 +90,12 @@ public class Bubble : MonoBehaviour
         this.Y = y;
     }
 
-    public void Init(int power, bool interactible, bool gunBubble)
+    public void Init(int power, BubbleState bubbleState)
     {
         rb.bodyType = RigidbodyType2D.Kinematic;
 
-        this.animationCfg = Root.Instance.ConfigManager.Animation;
         Power = power;
-        renderer.color = gunBubble ? Root.Instance.ConfigManager.Bubbles.bubbleGunColor : Root.Instance.ConfigManager.Bubbles.bubbleGridColor;
-        SetInteractible(interactible);
+        SetState(bubbleState);
     }
 
     public void Upgrade(int newNumber)
@@ -86,7 +124,7 @@ public class Bubble : MonoBehaviour
 
     public void Die(BubbleDeathType deathType)
     {
-        SetInteractible(false);
+        SetState(BubbleState.DYING);
         transform.DOKill();
 
         switch (deathType)
@@ -113,6 +151,12 @@ public class Bubble : MonoBehaviour
                 Debug.LogError($"Unknown death type {deathType}");
                 break;
         }
+    }
+
+    private void Awake()
+    {
+        this.animationCfg = Root.Instance.ConfigManager.Animation;
+        this.bubblesConfig = Root.Instance.ConfigManager.Bubbles;
     }
 
     private void Die()

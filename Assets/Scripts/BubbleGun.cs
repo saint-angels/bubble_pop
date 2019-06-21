@@ -59,7 +59,7 @@ public class BubbleGun : MonoBehaviour
         {
             if (alternativeBubble == null)
             {
-                Bubble newBubble = grid.CreateNewBubble(false, false, true);
+                Bubble newBubble = grid.CreateNewBubble(Bubble.BubbleState.GUN);
                 currentBubble = newBubble;
                 currentBubble.transform.position = muzzlePoint.position;
             }
@@ -71,7 +71,8 @@ public class BubbleGun : MonoBehaviour
                 MoveBubbleFromAltPositionToCurrent();
             }
 
-            Bubble newAltBubble = grid.CreateNewBubble(true, true, true);
+            Bubble newAltBubble = grid.CreateNewBubble(Bubble.BubbleState.GUN_ALT);
+            newAltBubble.transform.localScale = Vector3.one * grid.AltBubbleSize;
             newAltBubble.transform.position = AltBubblePoint;
             alternativeBubble = newAltBubble;
         }
@@ -85,7 +86,7 @@ public class BubbleGun : MonoBehaviour
     {
         currentBubble.transform.DOMove(muzzlePoint.position, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
         currentBubble.transform.DOScale(grid.BubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
-        currentBubble.SetInteractible(false);
+        currentBubble.SetState(Bubble.BubbleState.GUN);
     }
 
     void Update()
@@ -117,7 +118,7 @@ public class BubbleGun : MonoBehaviour
                 alternativeBubble.transform.DOMove(AltBubblePoint, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
                 alternativeBubble.transform
                     .DOScale(grid.AltBubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase)
-                    .OnComplete(() => alternativeBubble.SetInteractible(true));
+                    .OnComplete(() => alternativeBubble.SetState(Bubble.BubbleState.GUN_ALT));
 
             }
         }
@@ -201,6 +202,7 @@ public class BubbleGun : MonoBehaviour
                 Vector3 slotPosition = grid.IndecesToPosition(targetSlot.Value.x, targetSlot.Value.y);
                 currentBubble.transform.DOKill(true);
                 var moveTween = currentBubble.transform.DOMove(slotPosition, animationCfg.shootBubbleFlyDuration);
+                var squishTween = currentBubble.transform.DOScale(.5f, animationCfg.shootBubbleFlyDuration).SetEase(Ease.Flash, 2, 0);
                 Bubble flyingBubble = currentBubble;
                 Vector2Int gunTargetSlot = targetSlot.Value;
                 moveTween.OnComplete(() => 

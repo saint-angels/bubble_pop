@@ -9,6 +9,7 @@ public class BubblesConfig : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("bubbleColorMono")]
     public Color bubbleGridColor;
     public Color bubbleGunColor;
+    public Color bubbleDyingColor;
 
     public int spawnPowerRange = 3;
 

@@ -20,6 +20,9 @@ public class AnimationCfg : ScriptableObject
     public float bubbleShiftDuration = .5f;
     public Ease bubbleShiftEase = Ease.InOutQuint;
 
+    public float bubbleChangeColorDuration = .5f;
+    public Ease bubbleChangeColorEase = Ease.InOutQuint;
+
     [Header("Text Labels")]
     public float textChangeFloatOffsetY = 1f;
     public float textFloatRandomOffsetRadius = 1f;
