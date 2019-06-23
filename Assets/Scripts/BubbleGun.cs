@@ -18,6 +18,7 @@ public class BubbleGun : MonoBehaviour
     private GridManager grid;
     private AnimationCfg animationCfg;
     private BubblesConfig bubblesConfig;
+    private GridConfig gridConfig;
     private Vector3 altBubbleOffset;
     float distanceFromCamera;
 
@@ -34,8 +35,9 @@ public class BubbleGun : MonoBehaviour
         this.grid = Root.Instance.Grid;
         this.bubblesConfig = Root.Instance.ConfigManager.Bubbles;
         this.animationCfg = Root.Instance.ConfigManager.Animation;
+        this.gridConfig = Root.Instance.ConfigManager.Grid;
 
-        altBubbleOffset = Vector3.left * grid.BubbleSize * 1.25f;
+        altBubbleOffset = Vector3.left * gridConfig.BubbleSize * 1.25f;
         distanceFromCamera = Vector3.Distance(muzzlePoint.position, Camera.main.transform.position);
 
         layerWalls = LayerMask.NameToLayer("Walls");
@@ -72,7 +74,7 @@ public class BubbleGun : MonoBehaviour
             }
 
             Bubble newAltBubble = grid.CreateNewBubble(Bubble.BubbleState.GUN_ALT);
-            newAltBubble.transform.localScale = Vector3.one * grid.AltBubbleSize;
+            newAltBubble.transform.localScale = Vector3.one * gridConfig.AltBubbleSize;
             newAltBubble.transform.position = AltBubblePoint;
             alternativeBubble = newAltBubble;
         }
@@ -85,7 +87,7 @@ public class BubbleGun : MonoBehaviour
     private void MoveBubbleFromAltPositionToCurrent()
     {
         currentBubble.transform.DOMove(muzzlePoint.position, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
-        currentBubble.transform.DOScale(grid.BubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+        currentBubble.transform.DOScale(gridConfig.BubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
         currentBubble.SetState(Bubble.BubbleState.GUN);
     }
 
@@ -117,7 +119,7 @@ public class BubbleGun : MonoBehaviour
 
                 alternativeBubble.transform.DOMove(AltBubblePoint, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
                 alternativeBubble.transform
-                    .DOScale(grid.AltBubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase)
+                    .DOScale(gridConfig.AltBubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase)
                     .OnComplete(() => alternativeBubble.SetState(Bubble.BubbleState.GUN_ALT));
 
             }

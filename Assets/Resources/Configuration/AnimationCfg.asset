@@ -18,6 +18,7 @@ MonoBehaviour:
   bubbleFallEase: 3
   bubbleMergeDuration: 0.2
   bubbleMergeEase: 16
+  bubbleMergeTargetScale: 0.2
   bubbleShiftDuration: 0.5
   bubbleShiftEase: 16
   bubbleChangeColorDuration: 0.5

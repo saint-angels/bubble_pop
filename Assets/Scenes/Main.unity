@@ -511,6 +511,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animationCfg: {fileID: 11400000, guid: a4ec0fc685a2d204d84a52c7a0369d0d, type: 2}
   bubblesCfg: {fileID: 11400000, guid: 9014521e94b48834a896fe6d23a68c82, type: 2}
+  gridCfg: {fileID: 11400000, guid: 8febefe81dd0bbc49910f0e0399a35d6, type: 2}
 --- !u!4 &563288447
 Transform:
   m_ObjectHideFlags: 0

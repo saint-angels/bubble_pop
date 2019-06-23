@@ -134,7 +134,7 @@ public class Bubble : MonoBehaviour
                 break;
             case BubbleDeathType.EXPLOSION:
                 ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
-                newParticles.Init(Root.Instance.ConfigManager.Bubbles.ColorForPower(Power));
+                newParticles.Init(Color.red);
                 Die();
                 break;
             case BubbleDeathType.DROP:

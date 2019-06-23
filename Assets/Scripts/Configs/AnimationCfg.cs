@@ -17,6 +17,8 @@ public class AnimationCfg : ScriptableObject
     public float bubbleMergeDuration = .5f;
     public Ease bubbleMergeEase = Ease.InOutQuint;
 
+    public float bubbleMergeTargetScale = .5f;
+
     public float bubbleShiftDuration = .5f;
     public Ease bubbleShiftEase = Ease.InOutQuint;
 

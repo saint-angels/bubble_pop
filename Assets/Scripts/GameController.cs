@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DG.Tweening;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,6 +20,8 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
+        DOTween.SetTweensCapacity(500, 50);
+
         animationCfg = Root.Instance.ConfigManager.Animation;
         bubblesConfig = Root.Instance.ConfigManager.Bubbles;
 
