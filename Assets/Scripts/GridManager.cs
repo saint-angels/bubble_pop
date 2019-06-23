@@ -154,7 +154,7 @@ public class GridManager : MonoBehaviour
     }
 
     //TODO: Refactor
-    public Bubble CreateNewBubble(Bubble.BubbleState startBubbleState)
+    public Bubble CreateNewBubble(Bubble.BubbleState bubbleState)
     {
         int minBubblePower = int.MaxValue;
         IterateOverGrid((x, y, bubble) =>
@@ -183,14 +183,24 @@ public class GridManager : MonoBehaviour
             }
         }
 
-        int randomBottomBubbleIndex = UnityEngine.Random.Range(0, bottomTwoRowsBubbles.Count);
-        int randomBottomBubblePower = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
 
-        int bubblePower = bubblesConfig.GetPowerToSpawn(Root.Instance.GameController.Score, minBubblePower, randomBottomBubblePower);
+
+        int bubblePower = 0;
+        if (bubbleState == Bubble.BubbleState.GRID)
+        {
+            bubblePower = bubblesConfig.GetPowerForGrid(Root.Instance.GameController.Score, minBubblePower);
+        }
+        else
+        {
+            int randomBottomBubbleIndex = UnityEngine.Random.Range(0, bottomTwoRowsBubbles.Count);
+            int randomBottomBubblePower = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
+            bubblePower = randomBottomBubblePower;
+
+        }
         Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
         newBubble.SetGridPosition(0, 0);
         newBubble.transform.localScale = Vector3.one * bubbleSize;
-        newBubble.Init(bubblePower, startBubbleState);
+        newBubble.Init(bubblePower, bubbleState);
         Root.Instance.UI.AddHudToBubble(newBubble);
         return newBubble;
     }
@@ -255,7 +265,7 @@ public class GridManager : MonoBehaviour
             if (topBubble != null)
             {
                 hangingBubbles.Add(topBubble);
-                GravityBubbleBubble(topBubble, hangingBubbles);
+                CheckGravityForBubble(topBubble, hangingBubbles);
             }
         }
 
@@ -396,7 +406,7 @@ public class GridManager : MonoBehaviour
         bubble.SetGridPosition(x, y);
     }
 
-    private void GravityBubbleBubble(Bubble bubble, List<Bubble> hangingBubbles)
+    private void CheckGravityForBubble(Bubble bubble, List<Bubble> hangingBubbles)
     {
         List<Bubble> neighbours = NeighbourBubbles(bubble);
         foreach (Bubble neighbourBubble in neighbours)
@@ -404,7 +414,7 @@ public class GridManager : MonoBehaviour
             if (hangingBubbles.Contains(neighbourBubble) == false)
             {
                 hangingBubbles.Add(neighbourBubble);
-                GravityBubbleBubble(neighbourBubble, hangingBubbles);
+                CheckGravityForBubble(neighbourBubble, hangingBubbles);
             }
         }
     }

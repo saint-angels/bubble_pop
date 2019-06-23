@@ -24,11 +24,12 @@ public class BubblesConfig : ScriptableObject
         return bubbleColors[colorIndex];
     }
 
-    public int GetPowerToSpawn(ulong currentScore, int minBubblePower, int randomBottomBubblePower)
+    public int GetPowerForGrid(ulong currentScore, int minBubblePower)
     {
         int scoreSuggestedPower = currentScore == 0 ? 1 : (int)Mathf.Log(Mathf.Sqrt(currentScore), 2);
         int minPossiblePower = Mathf.Min(scoreSuggestedPower, minBubblePower) + 1;
         return Random.Range(minPossiblePower, minPossiblePower + spawnPowerRange);
+
 
         //More complicated version that doesn't work well
         //bool gridEmpty = randomBottomBubblePower == 0;
