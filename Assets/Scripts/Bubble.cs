@@ -35,6 +35,7 @@ public class Bubble : MonoBehaviour
     [SerializeField] private new Collider2D collider = null;
     [SerializeField] private new SpriteRenderer renderer = null;
     [SerializeField] private Rigidbody2D rb = null;
+    [SerializeField] private TrailRenderer trail = null;
 
     [Header("VFX")]
     [SerializeField] private ParticleEffectBase vfxExplosion = null;
@@ -61,18 +62,22 @@ public class Bubble : MonoBehaviour
             case BubbleState.GUN:
                 SetInteractible(false);
                 targetColor = bubblesConfig.bubbleGunColor;
+                trail.gameObject.SetActive(true);
                 break;
             case BubbleState.GUN_ALT:
                 SetInteractible(true);
                 targetColor = bubblesConfig.bubbleGunAltColor;
+                trail.gameObject.SetActive(false);
                 break;
             case BubbleState.GRID:
                 SetInteractible(true);
                 targetColor = bubblesConfig.bubbleGridColor;
+                trail.gameObject.SetActive(false);
                 break;
             case BubbleState.DYING:
                 SetInteractible(false);
                 targetColor = bubblesConfig.bubbleGridColor;
+                trail.gameObject.SetActive(false);
                 break;
             default:
                 Debug.LogWarning($"Unknown state {newState}");
@@ -134,7 +139,7 @@ public class Bubble : MonoBehaviour
                 break;
             case BubbleDeathType.EXPLOSION:
                 ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
-                newParticles.Init(Color.red);
+                newParticles.Init(bubblesConfig.ExplosionColorForPower(Power));
                 Die();
                 break;
             case BubbleDeathType.DROP:
