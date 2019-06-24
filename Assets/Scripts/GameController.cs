@@ -25,6 +25,7 @@ public class GameController : MonoBehaviour
         animationCfg = Root.Instance.ConfigManager.Animation;
         bubblesConfig = Root.Instance.ConfigManager.Bubbles;
 
+        Root.Instance.BubbleCreator.Init();
 
         Root.Instance.Grid.Init();
         Root.Instance.Grid.OnBubblesMerged += OnBubblesMerged;

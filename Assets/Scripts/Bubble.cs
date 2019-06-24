@@ -64,7 +64,7 @@ public class Bubble : MonoBehaviour
                 break;
             case BubbleState.GUN_ALT:
                 SetInteractible(true);
-                targetColor = bubblesConfig.bubbleGunColor;
+                targetColor = bubblesConfig.bubbleGunAltColor;
                 break;
             case BubbleState.GRID:
                 SetInteractible(true);

@@ -59,9 +59,10 @@ public class BubbleGun : MonoBehaviour
     {
         if (currentBubble == null)
         {
+            Sequence seq = DOTween.Sequence();
             if (alternativeBubble == null)
             {
-                Bubble newBubble = grid.CreateNewBubble(Bubble.BubbleState.GUN);
+                Bubble newBubble = Root.Instance.BubbleCreator.GetBubble(Bubble.BubbleState.GUN);
                 currentBubble = newBubble;
                 currentBubble.transform.position = muzzlePoint.position;
             }
@@ -73,7 +74,7 @@ public class BubbleGun : MonoBehaviour
                 MoveBubbleFromAltPositionToCurrent();
             }
 
-            Bubble newAltBubble = grid.CreateNewBubble(Bubble.BubbleState.GUN_ALT);
+            Bubble newAltBubble = Root.Instance.BubbleCreator.GetBubble(Bubble.BubbleState.GUN_ALT);
             newAltBubble.transform.localScale = Vector3.one * gridConfig.AltBubbleSize;
             newAltBubble.transform.position = AltBubblePoint;
             alternativeBubble = newAltBubble;

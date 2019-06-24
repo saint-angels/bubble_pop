@@ -10,6 +10,7 @@ public class Root : SingletonComponent<Root>
     public BubbleGun Gun => gun;
     public ConfigManager ConfigManager => configManager;
     public CameraController CameraController => cameraController;
+    public BubbleCreator BubbleCreator => bubbleCreator;
 
     [SerializeField] private GameController gameController = null;
     [SerializeField] private UIManager uiManager = null;
@@ -17,5 +18,6 @@ public class Root : SingletonComponent<Root>
     [SerializeField] private BubbleGun gun = null;
     [SerializeField] private ConfigManager configManager = null;
     [SerializeField] private CameraController cameraController = null;
+    [SerializeField] private BubbleCreator bubbleCreator = null;
 
 }

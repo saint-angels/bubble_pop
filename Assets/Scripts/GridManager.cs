@@ -11,8 +11,6 @@ public class GridManager : MonoBehaviour
     public event Action OnNothingMergedTurn = () => { };
     public event Action OnGridCleared = () => { };
 
-
-    [SerializeField] private Bubble bubblePrefab = null;
     [SerializeField] private Transform gridOriginPoint = null;
     [SerializeField] private GameObject bubbleOutline = null;
 
@@ -131,18 +129,7 @@ public class GridManager : MonoBehaviour
         return null;
     }
 
-    public Vector3 IndecesToPosition(int x, int y)
-    {
-        float positionX = gridConfig.hexSize * Mathf.Sqrt(3f)/2f * x;
-        float positionY = gridConfig.hexSize * 3f/2f * y;
-
-        positionX += gridOriginPoint.position.x;
-        positionY += gridOriginPoint.position.y;
-        return new Vector3(positionX, positionY, 0);
-    }
-
-    //TODO: Refactor
-    public Bubble CreateNewBubble(Bubble.BubbleState bubbleState)
+    public int GetMinBubblePower()
     {
         int minBubblePower = int.MaxValue;
         IterateOverGrid((x, y, bubble) =>
@@ -152,8 +139,11 @@ public class GridManager : MonoBehaviour
                 minBubblePower = bubble.Power;
             }
         });
+        return minBubblePower;
+    }
 
-
+    public int GetRandomBottomBubblePower()
+    {
         List<int> bottomTwoRowsBubbles = new List<int>();
         for (int x = 0; x < gridConfig.gridWidth; x++)
         {
@@ -171,26 +161,19 @@ public class GridManager : MonoBehaviour
             }
         }
 
+        int randomBottomBubbleIndex = UnityEngine.Random.Range(0, bottomTwoRowsBubbles.Count);
+        int randomBottomBubblePower = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
+        return randomBottomBubblePower;
+    }
 
+    public Vector3 IndecesToPosition(int x, int y)
+    {
+        float positionX = gridConfig.hexSize * Mathf.Sqrt(3f)/2f * x;
+        float positionY = gridConfig.hexSize * 3f/2f * y;
 
-        int bubblePower = 0;
-        if (bubbleState == Bubble.BubbleState.GRID)
-        {
-            bubblePower = bubblesConfig.GetPowerForGrid(Root.Instance.GameController.Score, minBubblePower);
-        }
-        else
-        {
-            int randomBottomBubbleIndex = UnityEngine.Random.Range(0, bottomTwoRowsBubbles.Count);
-            int randomBottomBubblePower = bottomTwoRowsBubbles.Count == 0 ? 0 : bottomTwoRowsBubbles[randomBottomBubbleIndex];
-            bubblePower = randomBottomBubblePower;
-
-        }
-        Bubble newBubble = ObjectPool.Spawn<Bubble>(bubblePrefab, Vector3.zero, Quaternion.identity);
-        newBubble.SetGridPosition(0, 0);
-        newBubble.transform.localScale = Vector3.one * gridConfig.BubbleSize;
-        newBubble.Init(bubblePower, bubbleState);
-        Root.Instance.UI.AddHudToBubble(newBubble);
-        return newBubble;
+        positionX += gridOriginPoint.position.x;
+        positionY += gridOriginPoint.position.y;
+        return new Vector3(positionX, positionY, 0);
     }
 
     private int Distance(Bubble b1, Bubble b2)
@@ -341,7 +324,7 @@ public class GridManager : MonoBehaviour
             {
                 if (grid[x, y] == null && PointOnHexGrid(x, y))
                 {
-                    Bubble newBubble = CreateNewBubble(Bubble.BubbleState.GRID);
+                    Bubble newBubble = Root.Instance.BubbleCreator.GetBubble(Bubble.BubbleState.GRID);
                     newBubble.transform.position = IndecesToPosition(x, y);
                     SetBubbleGridIndeces(newBubble, x, y);
                 }
