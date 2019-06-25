@@ -15,6 +15,7 @@ public class AnimationCfg : ScriptableObject
     public Ease bubbleFallEase = Ease.InOutQuint;
 
     public float bubbleMergeDuration = .5f;
+    public float bubbleMergeDelay = .01f;
     public Ease bubbleMergeEase = Ease.InOutQuint;
 
     public float bubbleMergeTargetScale = .5f;
@@ -33,5 +34,6 @@ public class AnimationCfg : ScriptableObject
     public float textChangeFloatOffsetY = 1f;
     public float textFloatRandomOffsetRadius = 1f;
     public float textChangeFloatDuration = .5f;
+    public float textChangeZoomInScale = 2f;
     public Ease textChangeFloatEase = Ease.InOutQuint;
 }

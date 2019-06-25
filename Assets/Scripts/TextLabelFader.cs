@@ -6,6 +6,12 @@ using UnityEngine;
 
 public class TextLabelFader : MonoBehaviour
 {
+    public enum FadeType
+    {
+        MoveUp,
+        ZoomIn
+    }
+
     public event Action OnFadeCompleted = () => { };
 
     private TMPro.TextMeshProUGUI textLabel;
@@ -22,7 +28,7 @@ public class TextLabelFader : MonoBehaviour
         textLabel.color = textColor;
     }
 
-    public void StartFade(bool withRandomStartOffset)
+    public void StartFade(bool withRandomStartOffset, FadeType fadeType)
     {
         AnimationCfg animCfg = Root.Instance.ConfigManager.Animation;
 
@@ -32,11 +38,25 @@ public class TextLabelFader : MonoBehaviour
             rectTransform.localPosition += new Vector3(randomUnitCircle.x, randomUnitCircle.y, 0);
         }
 
-        float targetY = rectTransform.localPosition.y + animCfg.textChangeFloatOffsetY;
 
         textLabel.DOFade(0, animCfg.textChangeFloatDuration);
 
-        rectTransform.DOLocalMoveY(targetY, animCfg.textChangeFloatDuration).SetEase(animCfg.textChangeFloatEase)
-                    .OnComplete(() => OnFadeCompleted()); ;
+
+        switch (fadeType)
+        {
+            case FadeType.MoveUp:
+                float targetY = rectTransform.localPosition.y + animCfg.textChangeFloatOffsetY;
+                rectTransform.DOLocalMoveY(targetY, animCfg.textChangeFloatDuration).SetEase(animCfg.textChangeFloatEase)
+                            .OnComplete(() => OnFadeCompleted());
+                break;
+            case FadeType.ZoomIn:
+                float targetScale = rectTransform.localScale.x * animCfg.textChangeZoomInScale;               
+                rectTransform.DOScale(targetScale, animCfg.textChangeFloatDuration).SetEase(animCfg.textChangeFloatEase)
+                            .OnComplete(() => OnFadeCompleted());
+                break;
+            default:
+                Debug.LogError($"Unknown fade type {fadeType}");
+                break;
+        }
     }
 }

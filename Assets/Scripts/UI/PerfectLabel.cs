@@ -7,6 +7,7 @@ public class PerfectLabel : FadingTextBase
 {
     public override void Init(string newText)
     {
+        rectTransform.localScale = Vector3.one;
         rectTransform.anchoredPosition = Vector2.zero;
         base.Init(newText);
     }

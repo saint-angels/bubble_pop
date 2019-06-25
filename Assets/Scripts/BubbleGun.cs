@@ -89,22 +89,16 @@ public class BubbleGun : MonoBehaviour
     {
         currentBubble.transform.DOMove(muzzlePoint.position, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
         currentBubble.transform.DOScale(gridConfig.BubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
-        currentBubble.SetState(Bubble.BubbleState.GUN);
+        currentBubble.SetState(Bubble.BubbleState.GUN, animationCfg.bubbleShiftDuration);
     }
 
     void Update()
     {
-        if (paused)
-        {
-            return;
-        }
-
-
-        bool aiming = Input.mousePosition.y / Screen.height > aimingRestrictedScreenFraction;
+        bool inAimingZone = Input.mousePosition.y / Screen.height > aimingRestrictedScreenFraction;
         Vector3 mousePosition = Input.mousePosition;
 
 
-        if (aiming == false && Input.GetMouseButtonDown(0))
+        if (inAimingZone == false && Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(mousePosition);
             RaycastHit2D vHit = Physics2D.Raycast(ray.origin, ray.direction);
@@ -119,18 +113,16 @@ public class BubbleGun : MonoBehaviour
 
 
                 alternativeBubble.transform.DOMove(AltBubblePoint, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
-                alternativeBubble.transform
-                    .DOScale(gridConfig.AltBubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase)
-                    .OnComplete(() => alternativeBubble.SetState(Bubble.BubbleState.GUN_ALT));
-
+                alternativeBubble.transform.DOScale(gridConfig.AltBubbleSize, animationCfg.bubbleShiftDuration).SetEase(animationCfg.bubbleShiftEase);
+                alternativeBubble.SetState(Bubble.BubbleState.GUN_ALT, animationCfg.bubbleShiftDuration);
             }
         }
 
 
-        //Process the aiming of a ball
+        //Process aiming of a ball
         bool pressing = Input.GetMouseButton(0);
-        trajectoryLine.gameObject.SetActive(pressing && aiming);
-        if (pressing && currentBubble != null && aiming)
+        trajectoryLine.gameObject.SetActive(pressing && inAimingZone && currentBubble != null);
+        if (pressing && currentBubble != null && inAimingZone)
         {
             trajectoryPositionsCurrent.Clear();
             trajectoryPositionsCurrent.Add(muzzlePoint.position);
@@ -189,7 +181,7 @@ public class BubbleGun : MonoBehaviour
             trajectoryLine.SetPositions(trajectoryPositionsCurrent.ToArray());
 
         }
-        else if(pressing && aiming == false)
+        else if(pressing && inAimingZone == false)
         {
             targetSlot = null;
             grid.SetBubbleOutlineActive(false);
@@ -202,20 +194,25 @@ public class BubbleGun : MonoBehaviour
             bool canShoot = targetSlot.HasValue;
             if (canShoot)
             {
+                //Shooting
                 Vector3 slotPosition = grid.IndecesToPosition(targetSlot.Value.x, targetSlot.Value.y);
                 currentBubble.transform.DOKill(true);
+                Sequence shootSequence = DOTween.Sequence();
                 var moveTween = currentBubble.transform.DOMove(slotPosition, animationCfg.shootBubbleFlyDuration);
                 var squishTween = currentBubble.transform.DOScale(.5f, animationCfg.shootBubbleFlyDuration).SetEase(Ease.Flash, 2, 0);
+                shootSequence.Insert(0, moveTween);
+                shootSequence.Insert(0, squishTween);
                 Bubble flyingBubble = currentBubble;
                 Vector2Int gunTargetSlot = targetSlot.Value;
-                moveTween.OnComplete(() => 
-                {
-                    grid.AttachBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y, true);
-                    LoadGun();
-                });
-
                 targetSlot = null;
                 currentBubble = null;
+                flyingBubble.SetState(Bubble.BubbleState.GRID, animationCfg.shootBubbleFlyDuration);
+                shootSequence.OnComplete(() => 
+                {
+                    grid.AttachBubble(flyingBubble, gunTargetSlot.x, gunTargetSlot.y, true)
+                        .Done(() => LoadGun());
+                });
+
             }
         }
     }

@@ -4,10 +4,12 @@ using UnityEngine;
 using System.Linq;
 using DG.Tweening;
 using System;
+using Promises;
 
 public class GridManager : MonoBehaviour
 {
     public event Action<int> OnBubblesMerged = (afterMergePower) => { };
+    public event Action<uint> OnMergeCombo = (mergeCombo) => { };
     public event Action OnNothingMergedTurn = () => { };
     public event Action OnGridCleared = () => { };
 
@@ -35,11 +37,12 @@ public class GridManager : MonoBehaviour
         FinishTurn();
     }
 
-    public void AttachBubble(Bubble newBubble, int x, int y, bool shotFromGun)
+    public IPromise AttachBubble(Bubble newBubble, int x, int y, bool shotFromGun, uint mergesInTurn = 0)
     {
+        Deferred attachDeferred = Deferred.GetFromPool();
+
         SetBubbleGridIndeces(newBubble, x, y);
         newBubble.transform.position = IndecesToPosition(x, y);
-        newBubble.SetState(Bubble.BubbleState.GRID);
 
         bubblesActionSet.Clear();
 
@@ -62,7 +65,7 @@ public class GridManager : MonoBehaviour
             for (int bIndex = bubblesMatched.Count - 1; bIndex >= 1; bIndex--)
             {
                 Bubble mergingBubble = bubblesMatched[bIndex];
-                float mergeDuration = animationCfg.bubbleMergeDuration + .01f * bIndex;
+                float mergeDuration = animationCfg.bubbleMergeDuration + animationCfg.bubbleMergeDelay * bIndex;
                 Tween mergeScaleTween = mergingBubble.transform.DOScale(animationCfg.bubbleMergeTargetScale, mergeDuration)
                                                           .SetEase(animationCfg.bubbleMergeEase);
                 Tween mergeMoveTween = mergingBubble.transform.DOMove(targetMergeBubble.transform.position, mergeDuration)
@@ -79,11 +82,13 @@ public class GridManager : MonoBehaviour
                 if (targetMergeBubble.Power >= bubblesConfig.explosionThresholdPower)
                 {
                     Explode(targetMergeBubble);
-                    FinishTurn();
+                    FinishTurn(mergesInTurn + 1);
+                    attachDeferred.Resolve();
                 }
                 else
                 {
-                    AttachBubble(targetMergeBubble, targetMergeBubble.X, targetMergeBubble.Y, false);
+                    AttachBubble(targetMergeBubble, targetMergeBubble.X, targetMergeBubble.Y, false, mergesInTurn + 1)
+                    .Done(() => attachDeferred.Resolve());
                 }
 
             });
@@ -99,8 +104,11 @@ public class GridManager : MonoBehaviour
     
                 OnNothingMergedTurn();
             }
-            FinishTurn();
+            FinishTurn(mergesInTurn);
+            attachDeferred.Resolve();
         }
+
+        return attachDeferred;
     }
 
     public void SetBubbleOutlineActive(bool isActive, Vector2Int? coordinates = null)
@@ -231,8 +239,10 @@ public class GridManager : MonoBehaviour
         return false;
     }
 
-    private void FinishTurn()
+    private void FinishTurn(uint mergesInTurn = 0)
     {
+        OnMergeCombo(mergesInTurn);
+
         //Check gravity
         List<Bubble> hangingBubbles = new List<Bubble>();
         for (int x = 0; x < gridConfig.gridWidth; x++)

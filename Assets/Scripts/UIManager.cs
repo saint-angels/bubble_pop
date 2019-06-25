@@ -52,7 +52,7 @@ public class UIManager : MonoBehaviour
 
     private void Bubble_OnDeath(Bubble bubble)
     {
-        bubbleHuds[bubble].Fade();
+        bubbleHuds[bubble].Fade(TextLabelFader.FadeType.MoveUp);
         bubbleHuds.Remove(bubble);
     }
 
@@ -60,7 +60,7 @@ public class UIManager : MonoBehaviour
     {
         if (currentScoreLabel != null)
         {
-            currentScoreLabel.Fade(false);
+            currentScoreLabel.Fade(TextLabelFader.FadeType.MoveUp, false);
         }
         
         currentScoreLabel = ObjectPool.Spawn(scoreLabelPrefab, Vector3.zero, Quaternion.identity, topPanel);
@@ -71,7 +71,7 @@ public class UIManager : MonoBehaviour
     {
         if (currentComboLabel != null)
         {
-            currentComboLabel.Fade(false);
+            currentComboLabel.Fade(TextLabelFader.FadeType.MoveUp, false);
         }
 
         currentComboLabel = ObjectPool.Spawn(comboLabelPrefab, Vector3.zero, Quaternion.identity, topPanel);
@@ -82,7 +82,7 @@ public class UIManager : MonoBehaviour
     {
         PerfectLabel newPerfectLabel = ObjectPool.Spawn(perfectLabelPrefab, Vector3.zero, Quaternion.identity, centerPanel);
         newPerfectLabel.Init("PERFECT");
-        newPerfectLabel.Fade(false);
+        newPerfectLabel.Fade(TextLabelFader.FadeType.MoveUp, false);
     }
 
     private void UpdateBubbleHudPosition(Bubble bubble, BubbleHud hud)
@@ -115,12 +115,23 @@ public class UIManager : MonoBehaviour
         Root.Instance.GameController.OnScoreUpdated += OnScoreUpdated;
         Root.Instance.GameController.OnComboUpdated += OnComboUpdated;
         Root.Instance.GameController.OnGridCleared += OnGridCleared;
+        Root.Instance.GameController.OnMergeCombo += OnMergeCombo;
 
         //Clear the score & combo on start
         OnScoreUpdated(0);
         OnComboUpdated(0);
     }
-    
+
+    private void OnMergeCombo(uint mergeCombo)
+    {
+        if (mergeCombo >= 2)
+        {
+            PerfectLabel newPerfectLabel = ObjectPool.Spawn(perfectLabelPrefab, Vector3.zero, Quaternion.identity, centerPanel);
+            newPerfectLabel.Init($"x{mergeCombo}");
+            newPerfectLabel.Fade(TextLabelFader.FadeType.ZoomIn, false);
+        }
+    }
+
     void LateUpdate()
     {
         foreach (var bubbleHudPair in bubbleHuds)

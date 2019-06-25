@@ -53,31 +53,32 @@ public class Bubble : MonoBehaviour
         new Vector2Int(1,1),
     };
 
-    public void SetState(BubbleState newState)
+    public void SetState(BubbleState newState, float? customTransitionDuration = null)
     {
         Color targetColor;
+        bool targetTrailTurnedOn = false;
 
         switch (newState)
         {
             case BubbleState.GUN:
                 SetInteractible(false);
                 targetColor = bubblesConfig.bubbleGunColor;
-                trail.gameObject.SetActive(true);
+                targetTrailTurnedOn = true;
                 break;
             case BubbleState.GUN_ALT:
                 SetInteractible(true);
                 targetColor = bubblesConfig.bubbleGunAltColor;
-                trail.gameObject.SetActive(false);
+                targetTrailTurnedOn = false;
                 break;
             case BubbleState.GRID:
                 SetInteractible(true);
                 targetColor = bubblesConfig.bubbleGridColor;
-                trail.gameObject.SetActive(false);
+                targetTrailTurnedOn = false;
                 break;
             case BubbleState.DYING:
                 SetInteractible(false);
                 targetColor = bubblesConfig.bubbleGridColor;
-                trail.gameObject.SetActive(false);
+                targetTrailTurnedOn = false;
                 break;
             default:
                 Debug.LogWarning($"Unknown state {newState}");
@@ -85,8 +86,10 @@ public class Bubble : MonoBehaviour
                 break;
         }
 
-        renderer.DOKill();
-        renderer.DOColor(targetColor, animationCfg.bubbleChangeColorDuration).SetEase(animationCfg.bubbleChangeColorEase);
+        renderer.DOKill(true);
+        float transitionDuration = customTransitionDuration.HasValue ? customTransitionDuration.Value : animationCfg.bubbleChangeColorDuration;
+        renderer.DOColor(targetColor, transitionDuration).SetEase(animationCfg.bubbleChangeColorEase)
+                .OnComplete(() => trail.gameObject.SetActive(targetTrailTurnedOn));
     }
 
     public void OnGunBubbleAttached(int neighbourX, int neighbourY)

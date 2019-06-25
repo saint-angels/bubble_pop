@@ -18,9 +18,9 @@ public abstract class FadingTextBase : MonoBehaviour
         textFader.Init(textLabel);
     }
 
-    public void Fade(bool withRandomOffset = true)
+    public void Fade(TextLabelFader.FadeType fadeType, bool withRandomOffset = true)
     {
-        textFader.StartFade(withRandomOffset);
+        textFader.StartFade(withRandomOffset, fadeType);
     }
 
     private void Awake()
