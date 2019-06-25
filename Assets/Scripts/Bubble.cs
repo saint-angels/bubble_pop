@@ -147,6 +147,7 @@ public class Bubble : MonoBehaviour
                 Die();
                 break;
             case BubbleDeathType.EXPLOSION:
+                Root.Instance.AudioManager.Play(AudioManager.SFXType.BubbleExplode);
                 ParticleEffectBase newParticles = ObjectPool.Spawn<ParticleEffectBase>(vfxExplosion, transform.position, Quaternion.identity);
                 newParticles.Init(bubblesConfig.ExplosionColorForPower(Power));
                 Die();

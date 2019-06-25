@@ -17,6 +17,7 @@ MonoBehaviour:
   bubbleFallDuration: 0.7
   bubbleFallEase: 3
   bubbleMergeDuration: 0.2
+  bubbleMergeDelay: 0.05
   bubbleMergeEase: 16
   bubbleMergeTargetScale: 0.2
   bubbleShiftDuration: 0.5
@@ -29,4 +30,5 @@ MonoBehaviour:
   textChangeFloatOffsetY: 20
   textFloatRandomOffsetRadius: 10
   textChangeFloatDuration: 0.5
+  textChangeZoomInScale: 2
   textChangeFloatEase: 6

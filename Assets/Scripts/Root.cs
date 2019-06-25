@@ -11,6 +11,7 @@ public class Root : SingletonComponent<Root>
     public ConfigManager ConfigManager => configManager;
     public CameraController CameraController => cameraController;
     public BubbleCreator BubbleCreator => bubbleCreator;
+    public AudioManager AudioManager => audioManager;
 
     [SerializeField] private GameController gameController = null;
     [SerializeField] private UIManager uiManager = null;
@@ -19,5 +20,7 @@ public class Root : SingletonComponent<Root>
     [SerializeField] private ConfigManager configManager = null;
     [SerializeField] private CameraController cameraController = null;
     [SerializeField] private BubbleCreator bubbleCreator = null;
+    [SerializeField] private AudioManager audioManager = null;
+
 
 }
