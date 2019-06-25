@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66a9fa5b1d88325459245f7cc7242078, type: 3}
   m_Name: AnimationCfg
   m_EditorClassIdentifier: 
-  shootBubbleFlyDuration: 0.25
-  shootBubbleFlyEase: 21
+  shootBubbleFlyDuration: 0.2
+  shootBubbleFlyEase: 27
   bubbleFallDuration: 0.7
   bubbleFallEase: 3
   bubbleMergeDuration: 0.2
@@ -23,6 +23,9 @@ MonoBehaviour:
   bubbleShiftEase: 16
   bubbleChangeColorDuration: 0.5
   bubbleChangeColorEase: 16
+  bubbleShotRecoilDuration: 0.05
+  bubbleShotRecoilOffset: 0.05
+  bubbleRecoilEase: 35
   textChangeFloatOffsetY: 20
   textFloatRandomOffsetRadius: 10
   textChangeFloatDuration: 0.5

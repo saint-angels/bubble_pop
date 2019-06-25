@@ -92,6 +92,11 @@ public class GridManager : MonoBehaviour
         {
             if (shotFromGun)
             {
+                foreach (var neighbour in NeighbourBubbles(newBubble))
+                {
+                    neighbour.OnGunBubbleAttached(newBubble.X, newBubble.Y);
+                }
+    
                 OnNothingMergedTurn();
             }
             FinishTurn();

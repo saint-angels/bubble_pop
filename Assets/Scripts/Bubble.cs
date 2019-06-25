@@ -89,6 +89,12 @@ public class Bubble : MonoBehaviour
         renderer.DOColor(targetColor, animationCfg.bubbleChangeColorDuration).SetEase(animationCfg.bubbleChangeColorEase);
     }
 
+    public void OnGunBubbleAttached(int neighbourX, int neighbourY)
+    {
+        Vector3 recoilOffset = new Vector3(X - neighbourX, Y - neighbourY, 0) * animationCfg.bubbleShotRecoilOffset;
+        transform.DOBlendableLocalMoveBy(recoilOffset, animationCfg.bubbleShotRecoilDuration).SetEase(animationCfg.bubbleRecoilEase, 2, 0);
+    }
+
     public void SetGridPosition(int x, int y)
     {
         this.X = x;
